@@ -56,9 +56,19 @@ type
 
   { TCustomMPlayerControl }
 
+  TOnFeedback = procedure(ASender: TObject; AStrings: TStringList) of object;
+  TOnError = procedure(ASender: TObject; AStrings: TStringList) of object;
+  TOnPlaying = procedure(ASender: TObject; APosition: Single) of object;
+
   TCustomMPlayerControl = class(TWinControl)
   private
+    FDuration: Single;
     FFilename: string;
+    FOnError: TOnError;
+    FOnFeedback: TOnFeedback;
+    FOnPlay: TNotifyEvent;
+    FOnPlaying: TOnPlaying;
+    FOnStop: TNotifyEvent;
     FStartParam:string;
     FLoop: integer;
     FMPlayerPath: string;
@@ -67,16 +77,20 @@ type
     fTimer: TTimer;
     FVolume: integer;
     FCanvas: TCanvas;
+    function GetPosition: Single;
     procedure SetFilename(const AValue: string);
     procedure SetLoop(const AValue: integer);
     procedure SetMPlayerPath(const AValue: string);
     procedure SetPaused(const AValue: boolean);
+    procedure SetPosition(AValue: Single);
     procedure SetVolume(const AValue: integer);
     procedure SetStartParam(const AValue: string);
     procedure TimerEvent(Sender: TObject);
   protected
     procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
     procedure WMSize(var Message: TLMSize); message LM_SIZE;
+
+    function DoCommand(ACommand, AResultIdentifier: String) : String;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -95,6 +109,15 @@ type
     property Paused: boolean read FPaused write SetPaused;
     property Loop: integer read FLoop write SetLoop; // -1 no, 0 forever, 1 once, 2 twice, ...
     property Volume: integer read FVolume write SetVolume;
+
+    property Duration: Single read FDuration; // seconds
+    property Position: Single read GetPosition write SetPosition;
+
+    property OnFeedback : TOnFeedback read FOnFeedback write FOnFeedback;
+    property OnError: TOnError read FOnError write FOnError;
+    property OnPlaying: TOnPlaying read FOnPlaying write FOnPlaying;
+    property OnPlay: TNotifyEvent read FOnPlay write FOnPlay;
+    property OnStop: TNotifyEvent read FOnStop write FOnStop;
   end;
 
   TMPlayerControl = class(TCustomMPlayerControl)
@@ -135,18 +158,70 @@ begin
   RegisterComponents('Multimedia',[TMPlayerControl]);
 end;
 
+Function ExtractAfter(AInput, AIdentifier: String): String; inline;
+begin
+  Result := Copy(AInput, Length(AIdentifier)+1, Length(AInput)-Length(AIdentifier));
+end;
 
 { TCustomMPlayerControl }
 
 procedure TCustomMPlayerControl.TimerEvent(Sender: TObject);
 var
   OutList, ErrList:TStringlist;
+  dPosition: Single;
+  i: Integer;
+  sTemp : String;
+  bFoundPosition: Boolean;
+
 begin
   if Running then begin
     if fPlayerProcess.Output.NumBytesAvailable > 0 then begin
+      // Inject a request for current position
+      bFoundPosition := False;
+      If Assigned(FOnPlaying) Then
+        SendMPlayerCommand('get_time_pos');
+
       OutList:=TStringlist.create;
       try
         OutList.LoadFromStream(fPlayerProcess.Output);
+
+        // Look for responses to injected commands...
+        // or for standard commands
+        For i := OutList.Count-1 downto 0 Do
+        begin
+          sTemp := Trim(OutList[i]);
+
+          If (FDuration=-1) And (Pos('ANS_LENGTH=', sTemp)=1) Then
+          begin
+            FDuration := StrToFloatDef(ExtractAfter(sTemp, 'ANS_LENGTH='), -1);
+
+            // clear this response from the queue
+            OutList.Delete(i);
+          end
+          Else If Assigned(FOnPlaying) and (Not bFoundPosition) And (Pos('ANS_TIME_POSITION=', sTemp)=1) Then
+          begin
+            dPosition := StrToFloatDef(ExtractAfter(sTemp, 'ANS_TIME_POSITION='), 0);
+
+            // clear this response from the queue
+            OutList.Delete(i);
+
+            // Send the message
+            FOnPlaying(Self, dPosition);
+
+            // Don't remove any further ANS_Time_Positions, they're not ours...
+            bFoundPosition := True;
+          end
+          Else If Assigned(FOnPLay) And (sTemp='Starting playback...') Then
+            FOnPlay(Self)
+          Else if Assigned(FOnStop) And (Pos('EOF code:', sTemp)=1) Then
+          begin
+            FDuration := -1;
+            FOnStop(Self);
+          end;
+        end;
+
+        if Assigned(FOnFeedback) And (Outlist.Count>0) Then
+          FOnFeedback(Self, Outlist);
       finally
         OutList.free;
       end;
@@ -155,6 +230,9 @@ begin
       ErrList:=TStringlist.create;
       try
         ErrList.LoadFromStream(fPlayerProcess.Stderr);
+
+        if Assigned(FOnFeedback) Then
+          FOnFeedback(Self, ErrList);
       finally
         ErrList.free;
       end;
@@ -183,6 +261,17 @@ begin
         Handle := 0;
     end;
   end;
+  if (Not Running) and (FCanvas<>nil) then begin
+    with FCanvas do begin
+      if Message.DC <> 0 then
+        Handle := Message.DC;
+      Brush.Color:=clBlack;
+      Pen.Color:=clBlack;
+      Rectangle(0,0,Self.Width-1,Self.Height-1);
+      if Message.DC <> 0 then
+        Handle := 0;
+    end;
+  end;
   Exclude(FControlState, csCustomPaint);
 end;
 
@@ -190,6 +279,55 @@ procedure TCustomMPlayerControl.WMSize(var Message: TLMSize);
 begin
   if (Message.SizeType and Size_SourceIsInterface)>0 then
     DoOnResize;
+end;
+
+function TCustomMPlayerControl.DoCommand(ACommand, AResultIdentifier: String): String;
+var
+  i: Integer;
+  OutList: TStringList;
+begin
+  if not Running then
+    Exit;
+
+  // Pause the timer
+  fTimer.Enabled := False;
+
+  // Clear the output queue
+  TimerEvent(Self);
+
+  SendMPlayerCommand(ACommand);
+
+  // Now *immediately* read the output results
+  // this will have problems if mplayer takes
+  // a while to execute this command...
+
+  // Read the result
+  OutList:=TStringlist.create;
+  try
+    OutList.LoadFromStream(fPlayerProcess.Output);
+
+    i := 0;
+
+    while (i<OutList.Count) And (Pos(AResultIdentifier, Outlist[i])<>1) do
+      Inc(i);
+
+    If i<> OutList.Count Then
+    begin
+      Result := ExtractAfter(OutList[i], AResultIdentifier);
+
+      // Remove our feedback from the queue
+      //Outlist.Delete(i);
+    end;
+
+    // Ensure any feedback we accidently intercepted get's processed
+    if Assigned(FOnFeedback) And (Outlist.Count>0) Then
+      FOnFeedback(Self, Outlist);
+  finally
+    OutList.Free;
+  end;
+
+  // Resume the timer
+  fTimer.Enabled := True;
 end;
 
 
@@ -205,6 +343,16 @@ begin
   FFilename:=AValue;
   if Running then
     SendMPlayerCommand('loadfile '+StrToCmdLineParam(Filename));
+end;
+
+function TCustomMPlayerControl.GetPosition: Single;
+begin
+  Result := 0;
+
+  if not Running then
+    exit;
+
+  Result := StrToFloatDef(DoCommand('get_time_pos', 'ANS_TIME_POSITION='), 0);
 end;
 
 procedure TCustomMPlayerControl.SetLoop(const AValue: integer);
@@ -228,6 +376,12 @@ begin
     FPaused:=AValue;
     SendMPlayerCommand('pause');
   end;
+end;
+
+procedure TCustomMPlayerControl.SetPosition(AValue: Single);
+begin
+  if Running then
+    SendMPlayerCommand(Format('seek %.3f 2', [AValue]));
 end;
 
 procedure TCustomMPlayerControl.SetVolume(const AValue: integer);
@@ -314,10 +468,22 @@ begin
 
   fPlayerProcess:=TProcessUTF8.Create(Self);
   fPlayerProcess.Options:=fPlayerProcess.Options+[poUsePipes,poNoConsole];
-  fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+StrToCmdLineParam(Filename);
+  //sTemp := ExePath+' -slave -quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+StrToCmdLineParam(Filename);
+  { -quiet              : supress most messages
+    -msglevel global=6  : required for EOF signal when playing stops
+    -wid                : sets Window ID
+  }
+  fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -msglevel global=6 -noconfig all -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;
+  //fPlayerProcess.CommandLine:=ExePath+' -slave −really−quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;;
   DebugLn(['TCustomMPlayerControl.Play ',fPlayerProcess.CommandLine]);
 
   fPlayerProcess.Execute;
+
+  // Inject a request for Duration
+  FDuration := -1;
+  SendMPlayerCommand('get_time_length');
+
+  // Start the timer that handles feedback from mplayer
   fTimer.Enabled:=true;
 end;
 
