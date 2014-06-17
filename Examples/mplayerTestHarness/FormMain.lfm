@@ -1,44 +1,44 @@
 object frmMain: TfrmMain
-  Left = 514
-  Height = 592
-  Top = 187
-  Width = 485
+  Left = 352
+  Height = 548
+  Top = 167
+  Width = 1099
   Caption = 'frmMain'
-  ClientHeight = 592
-  ClientWidth = 485
+  ClientHeight = 548
+  ClientWidth = 1099
   OnCreate = FormCreate
   LCLVersion = '1.2.2.0'
   object pnlVideo: TPanel
-    Left = 0
-    Height = 308
+    Left = 640
+    Height = 508
     Top = 40
-    Width = 485
+    Width = 459
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 308
-    ClientWidth = 485
+    ClientHeight = 508
+    ClientWidth = 459
     TabOrder = 0
     object MPlayerControl1: TMPlayerControl
       Left = 0
-      Height = 286
+      Height = 486
       Top = 0
-      Width = 485
+      Width = 459
       Align = alClient
       Loop = 0
       Volume = 0
     end
-    object Panel2: TPanel
+    object pnlTrackbar: TPanel
       Left = 0
       Height = 22
-      Top = 286
-      Width = 485
+      Top = 486
+      Width = 459
       Align = alBottom
       BevelOuter = bvNone
       ClientHeight = 22
-      ClientWidth = 485
+      ClientWidth = 459
       TabOrder = 1
       object Panel3: TPanel
-        Left = 418
+        Left = 392
         Height = 22
         Top = 0
         Width = 67
@@ -60,7 +60,7 @@ object frmMain: TfrmMain
         Left = 0
         Height = 22
         Top = 0
-        Width = 418
+        Width = 392
         Frequency = 5
         OnChange = TrackBar1Change
         Position = 0
@@ -73,11 +73,11 @@ object frmMain: TfrmMain
     Left = 0
     Height = 40
     Top = 0
-    Width = 485
+    Width = 1099
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 40
-    ClientWidth = 485
+    ClientWidth = 1099
     TabOrder = 1
     object btnLoad: TBitBtn
       Left = 8
@@ -100,25 +100,28 @@ object frmMain: TfrmMain
       TabOrder = 1
     end
   end
-  object pnlControl: TPanel
+  object pnlFeedback: TPanel
     Left = 0
-    Height = 239
-    Top = 353
-    Width = 485
-    Align = alBottom
+    Height = 508
+    Top = 40
+    Width = 635
+    Align = alLeft
     BevelOuter = bvNone
-    ClientHeight = 239
-    ClientWidth = 485
+    ClientHeight = 508
+    ClientWidth = 635
     TabOrder = 2
     object memResults: TMemo
       Left = 0
-      Height = 207
+      Height = 476
       Top = 32
-      Width = 485
+      Width = 635
       Align = alClient
+      Color = clBackground
+      Font.Color = clInfoBk
       Lines.Strings = (
         ''
       )
+      ParentFont = False
       ScrollBars = ssAutoBoth
       TabOrder = 0
     end
@@ -126,11 +129,11 @@ object frmMain: TfrmMain
       Left = 0
       Height = 32
       Top = 0
-      Width = 485
+      Width = 635
       Align = alTop
       BevelOuter = bvNone
       ClientHeight = 32
-      ClientWidth = 485
+      ClientWidth = 635
       TabOrder = 1
       object cboCommand: TComboBox
         Left = 12
@@ -179,13 +182,10 @@ object frmMain: TfrmMain
     end
   end
   object Splitter1: TSplitter
-    Cursor = crVSplit
-    Left = 0
-    Height = 5
-    Top = 348
-    Width = 485
-    Align = alBottom
-    ResizeAnchor = akBottom
+    Left = 635
+    Height = 508
+    Top = 40
+    Width = 5
   end
   object OpenDialog1: TOpenDialog
     left = 32

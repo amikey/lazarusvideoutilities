@@ -77,6 +77,7 @@ type
     fTimer: TTimer;
     FVolume: integer;
     FCanvas: TCanvas;
+    OutList : TStringlist;
     function GetPosition: Single;
     procedure SetFilename(const AValue: string);
     procedure SetLoop(const AValue: integer);
@@ -167,7 +168,7 @@ end;
 
 procedure TCustomMPlayerControl.TimerEvent(Sender: TObject);
 var
-  OutList, ErrList:TStringlist;
+  ErrList:TStringlist;
   dPosition: Single;
   i: Integer;
   sTemp : String;
@@ -181,58 +182,49 @@ begin
       If Assigned(FOnPlaying) Then
         SendMPlayerCommand('get_time_pos');
 
-      OutList:=TStringlist.create;
-      try
-        OutList.LoadFromStream(fPlayerProcess.Output);
+      OutList.LoadFromStream(fPlayerProcess.Output);
 
-        // Look for responses to injected commands...
-        // or for standard commands
-        For i := OutList.Count-1 downto 0 Do
+      // Look for responses to injected commands...
+      // or for standard commands
+      For i := OutList.Count-1 downto 0 Do
+      begin
+        sTemp := OutList[i];
+
+        If (FDuration=-1) And (Pos('ANS_LENGTH=', sTemp)=1) Then
         begin
-          sTemp := Trim(OutList[i]);
+          FDuration := StrToFloatDef(ExtractAfter(sTemp, 'ANS_LENGTH='), -1);
 
-          If (FDuration=-1) And (Pos('ANS_LENGTH=', sTemp)=1) Then
-          begin
-            FDuration := StrToFloatDef(ExtractAfter(sTemp, 'ANS_LENGTH='), -1);
+          // clear this response from the queue
+          OutList.Delete(i);
+        end
+        Else If Assigned(FOnPlaying) and (Not bFoundPosition) And (Pos('ANS_TIME_POSITION=', sTemp)=1) Then
+        begin
+          dPosition := StrToFloatDef(ExtractAfter(sTemp, 'ANS_TIME_POSITION='), 0);
 
-            // clear this response from the queue
-            OutList.Delete(i);
-          end
-          Else If Assigned(FOnPlaying) and (Not bFoundPosition) And (Pos('ANS_TIME_POSITION=', sTemp)=1) Then
-          begin
-            dPosition := StrToFloatDef(ExtractAfter(sTemp, 'ANS_TIME_POSITION='), 0);
+          // clear this response from the queue
+          OutList.Delete(i);
 
-            // clear this response from the queue
-            OutList.Delete(i);
+          // Don't remove any further ANS_Time_Positions, they're not ours...
+          bFoundPosition := True;
 
-            // Send the message
-            FOnPlaying(Self, dPosition);
-
-            // Don't remove any further ANS_Time_Positions, they're not ours...
-            bFoundPosition := True;
-          end
-          Else If Assigned(FOnPLay) And (sTemp='Starting playback...') Then
-            FOnPlay(Self)
-          Else if Assigned(FOnStop) And (Pos('EOF code:', sTemp)=1) Then
-          begin
-            FDuration := -1;
-            FOnStop(Self);
-          end;
-        end;
-
-        if Assigned(FOnFeedback) And (Outlist.Count>0) Then
-          FOnFeedback(Self, Outlist);
-      finally
-        OutList.free;
+          // Send the message
+          FOnPlaying(Self, dPosition);
+        end
+        Else If Assigned(FOnPlay) And (sTemp='Starting playback...') Then
+          FOnPlay(Self);
       end;
+
+      if Assigned(FOnFeedback) And (Outlist.Count>0) Then
+        FOnFeedback(Self, Outlist);
     end;
+
     if fPlayerProcess.StdErr.NumBytesAvailable > 0 then begin
       ErrList:=TStringlist.create;
       try
         ErrList.LoadFromStream(fPlayerProcess.Stderr);
 
-        if Assigned(FOnFeedback) Then
-          FOnFeedback(Self, ErrList);
+        if Assigned(FOnError) Then
+          FOnError(Self, ErrList);
       finally
         ErrList.free;
       end;
@@ -273,7 +265,6 @@ end;
 function TCustomMPlayerControl.DoCommand(ACommand, AResultIdentifier: String): String;
 var
   i: Integer;
-  OutList: TStringList;
 begin
   if not Running then
     Exit;
@@ -286,34 +277,24 @@ begin
 
   SendMPlayerCommand(ACommand);
 
-  // Now *immediately* read the output results
+  // Now *immediately* read the output results.
   // this will have problems if mplayer takes
   // a while to execute this command...
 
   // Read the result
-  OutList:=TStringlist.create;
-  try
-    OutList.LoadFromStream(fPlayerProcess.Output);
+  OutList.LoadFromStream(fPlayerProcess.Output);
 
-    i := 0;
+  // Find our reply
+  i := 0;
+  while (i<OutList.Count) And (Pos(AResultIdentifier, Outlist[i])<>1) do
+    Inc(i);
 
-    while (i<OutList.Count) And (Pos(AResultIdentifier, Outlist[i])<>1) do
-      Inc(i);
+  If (i<>OutList.Count) Then
+    Result := ExtractAfter(OutList[i], AResultIdentifier);
 
-    If i<> OutList.Count Then
-    begin
-      Result := ExtractAfter(OutList[i], AResultIdentifier);
-
-      // Remove our feedback from the queue
-      //Outlist.Delete(i);
-    end;
-
-    // Ensure any feedback we accidently intercepted get's processed
-    if Assigned(FOnFeedback) And (Outlist.Count>0) Then
-      FOnFeedback(Self, Outlist);
-  finally
-    OutList.Free;
-  end;
+  // Ensure any feedback we accidently intercepted get's processed
+  if Assigned(FOnFeedback) And (Outlist.Count>0) Then
+    FOnFeedback(Self, Outlist);
 
   // Resume the timer
   fTimer.Enabled := True;
@@ -389,8 +370,13 @@ begin
   TControlCanvas(FCanvas).Control := Self;
   SetInitialBounds(0, 0, 160, 90);
 
+  Outlist := TStringList.Create;
+
   fMPlayerPath:='mplayer'+GetExeExt;
+
   fTimer:=TTimer.Create(Self);
+  fTimer.Enabled:=false;
+  fTimer.Interval:=500;
   fTimer.OnTimer:=@TimerEvent;
 end;
 
@@ -399,6 +385,7 @@ begin
   Stop;
   FreeAndNil(FCanvas);
   FreeAndNil(fTimer);
+  FreeAndNil(OutList);
   inherited Destroy;
 end;
 
@@ -463,13 +450,22 @@ begin
 
   { -quiet              : supress most messages
     -msglevel global=6  : required for EOF signal when playing stops
-    -wid                : sets Window ID     }
-  fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -msglevel global=6 -noconfig all -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;
+    -wid                : sets Window ID
+    -noconfig all       : stop mplayer from reading commands from a text file }
+  fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -noconfig all -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;
 
   // -really-quiet causes the video player to not connect to -wid.  Odd...
   //fPlayerProcess.CommandLine:=ExePath+' -slave −really−quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;;
 
   DebugLn(['TCustomMPlayerControl.Play ',fPlayerProcess.CommandLine]);
+
+  if assigned(FOnFeedback) Then
+  begin
+    Outlist.Clear;
+    Outlist.Add(fPlayerProcess.CommandLine);
+    Outlist.Add('');
+    FonFeedback(Self, Outlist);
+  end;
 
   fPlayerProcess.Execute;
 
@@ -485,9 +481,15 @@ procedure TCustomMPlayerControl.Stop;
 begin
   if fPlayerProcess=nil then exit;
   FPaused:=false;
+  FDuration:=-1;
   fTimer.Enabled:=false;
-  SendMPlayerCommand('quit');
+
+  If Assigned(FOnStop) Then
+    FOnStop(Self);
+  //SendMPlayerCommand('quit');
   FreeAndNil(fPlayerProcess);
+  // repaint the control
+  Invalidate;
 end;
 
 function TCustomMPlayerControl.Playing: boolean;
