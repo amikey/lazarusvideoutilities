@@ -21,10 +21,10 @@ Type
     memResults: TMemo;
     MPlayerControl1: TMPlayerControl;
     OpenDialog1: TOpenDialog;
-    Panel2: TPanel;
+    pnlTrackbar: TPanel;
     Panel3: TPanel;
     pnlCommands: TPanel;
-    pnlControl: TPanel;
+    pnlFeedback: TPanel;
     pnlToolbar: TPanel;
     pnlVideo: TPanel;
     Splitter1: TSplitter;
@@ -39,6 +39,14 @@ Type
     Procedure OnPlaying(ASender: TObject; APosition: Single);
     Procedure OnStop(Sender: TObject);
     Procedure TrackBar1Change(Sender: TObject);
+  private
+    function GetUpdatingPosition: Boolean;
+    procedure SetUpdatingPosition(AValue: Boolean);
+  private
+    FUpdatingPosition : Integer;
+    FLastPosition : Integer;
+
+    Property UpdatingPosition : Boolean Read GetUpdatingPosition Write SetUpdatingPosition;
   End;
 
 Var
@@ -50,8 +58,10 @@ Implementation
 
 { TfrmMain }
 
-Procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TfrmMain.FormCreate(Sender: TObject);
 Begin
+  FUpdatingPosition := 0;
+  FLastPosition := -1;
   TrackBar1.Max := 100;
 
   MPlayerControl1.OnFeedback := @OnFeedback;
@@ -64,7 +74,7 @@ Begin
   MPlayerControl1.StartParam := '-vf screenshot';
 End;
 
-Procedure TfrmMain.btnLoadClick(Sender: TObject);
+procedure TfrmMain.btnLoadClick(Sender: TObject);
 Begin
   If OpenDialog1.Execute Then
   Begin
@@ -75,19 +85,19 @@ Begin
   End;
 End;
 
-Procedure TfrmMain.btnInvalidClick(Sender: TObject);
+procedure TfrmMain.btnInvalidClick(Sender: TObject);
 Begin
   MPlayerControl1.Filename :=
     'B:\Code\Compile\Test Data\6GIRBC1EDC4_OA_FL_2012-R~001_12-06-07_01-50-56_1.pkt';
   MPlayerControl1.Play;
 End;
 
-Procedure TfrmMain.btnRunCommandClick(Sender: TObject);
+procedure TfrmMain.btnRunCommandClick(Sender: TObject);
 Begin
   MPlayerControl1.SendMPlayerCommand(cboCommand.Text);
 End;
 
-Procedure TfrmMain.OnFeedback(ASender: TObject; AStrings: TStringList);
+procedure TfrmMain.OnFeedback(ASender: TObject; AStrings: TStringList);
 Begin
   memResults.Lines.AddStrings(AStrings);
 
@@ -95,51 +105,77 @@ Begin
   memResults.SelLength:=0;
 End;
 
-Procedure TfrmMain.OnError(ASender: TObject; AStrings: TStringList);
+procedure TfrmMain.OnError(ASender: TObject; AStrings: TStringList);
 Var
   i: Integer;
 Begin
-  memResults.Lines.Add('Error');
-  memResults.Lines.Add('-----');
   For i := 0 To AStrings.Count - 1 Do
-    memResults.Lines.Add('   ' + AStrings[i]);
+    memResults.Lines.Add(' Err: ' + AStrings[i]);
 End;
 
-Procedure TfrmMain.OnPlaying(ASender: TObject; APosition: Single);
+procedure TfrmMain.OnPlaying(ASender: TObject; APosition: Single);
 Begin
   If (MPlayerControl1.Duration <> -1) Then
   Begin
-    Trackbar1.Tag := 100;
+    // Ignore TrackBar1.OnChange as it's us that's changing it
+    UpdatingPosition := True;
     Try
       Trackbar1.Position := Trunc(100 * APosition / MPlayerControl1.Duration);
 
       lblPos.Caption := Format('%.1f / %.1f', [APosition, MPlayerControl1.Duration]);
     Finally
-      Trackbar1.Tag := 0;
+      UpdatingPosition := False;
     End;
   End;
 End;
 
-Procedure TfrmMain.TrackBar1Change(Sender: TObject);
+procedure TfrmMain.TrackBar1Change(Sender: TObject);
 Begin
-  If (TrackBar1.Tag = 0) And (MPlayerControl1.Duration <> -1) Then
-    MPlayerControl1.Position := MPlayerControl1.Duration * TrackBar1.Position / 100;
+  If (Not UpdatingPosition) And (MPlayerControl1.Duration <> -1) Then
+  begin
+    If Trackbar1.Position<>FLastPosition Then
+    begin
+      UpdatingPosition := True;
+      Try
+        MPlayerControl1.Position := MPlayerControl1.Duration * TrackBar1.Position / 100;
+        FLastPosition := TrackBar1.Position;
+      finally
+        UpdatingPosition := False;
+      end;
+    end;
+  end;
 End;
 
-Procedure TfrmMain.OnPlay(Sender: TObject);
+function TfrmMain.GetUpdatingPosition: Boolean;
+begin
+  Result := FUpdatingPosition<>0;
+end;
+
+procedure TfrmMain.SetUpdatingPosition(AValue: Boolean);
+begin
+  If AValue Then
+    Inc(FUpdatingPosition)
+  Else
+    Dec(FUpdatingPosition);
+end;
+
+procedure TfrmMain.OnPlay(Sender: TObject);
 Begin
-  pnlVideo.Visible := True;
+  memResults.Lines.Add('OnPlay message received');
 End;
 
-Procedure TfrmMain.OnStop(Sender: TObject);
+procedure TfrmMain.OnStop(Sender: TObject);
 Begin
-  pnlVideo.Visible := False;
+  If csDestroying in ComponentState Then
+    exit;
 
-  Trackbar1.Tag := 100;
+  memResults.Lines.Add('OnStop message received');
+
+  UpdatingPosition:=True;
   Try
     Trackbar1.Position := 0;
   Finally
-    Trackbar1.Tag := 0;
+    UpdatingPosition:=False;
   End;
 
   lblPos.Caption := '';
