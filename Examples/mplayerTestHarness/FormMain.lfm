@@ -1,0 +1,194 @@
+object frmMain: TfrmMain
+  Left = 514
+  Height = 592
+  Top = 187
+  Width = 485
+  Caption = 'frmMain'
+  ClientHeight = 592
+  ClientWidth = 485
+  OnCreate = FormCreate
+  LCLVersion = '1.2.2.0'
+  object pnlVideo: TPanel
+    Left = 0
+    Height = 308
+    Top = 40
+    Width = 485
+    Align = alClient
+    BevelOuter = bvNone
+    ClientHeight = 308
+    ClientWidth = 485
+    TabOrder = 0
+    object MPlayerControl1: TMPlayerControl
+      Left = 0
+      Height = 286
+      Top = 0
+      Width = 485
+      Align = alClient
+      Loop = 0
+      Volume = 0
+    end
+    object Panel2: TPanel
+      Left = 0
+      Height = 22
+      Top = 286
+      Width = 485
+      Align = alBottom
+      BevelOuter = bvNone
+      ClientHeight = 22
+      ClientWidth = 485
+      TabOrder = 1
+      object Panel3: TPanel
+        Left = 418
+        Height = 22
+        Top = 0
+        Width = 67
+        Align = alRight
+        BevelOuter = bvNone
+        ClientHeight = 22
+        ClientWidth = 67
+        TabOrder = 0
+        object lblPos: TLabel
+          Left = 0
+          Height = 15
+          Top = 4
+          Width = 22
+          Caption = 'x / y'
+          ParentColor = False
+        end
+      end
+      object TrackBar1: TTrackBar
+        Left = 0
+        Height = 22
+        Top = 0
+        Width = 418
+        Frequency = 5
+        OnChange = TrackBar1Change
+        Position = 0
+        Align = alClient
+        TabOrder = 1
+      end
+    end
+  end
+  object pnlToolbar: TPanel
+    Left = 0
+    Height = 40
+    Top = 0
+    Width = 485
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 485
+    TabOrder = 1
+    object btnLoad: TBitBtn
+      Left = 8
+      Height = 30
+      Top = 4
+      Width = 75
+      Anchors = [akLeft, akBottom]
+      Caption = 'Load Valid'
+      OnClick = btnLoadClick
+      TabOrder = 0
+    end
+    object btnInvalid: TBitBtn
+      Left = 104
+      Height = 30
+      Top = 4
+      Width = 75
+      Anchors = [akLeft, akBottom]
+      Caption = 'Load Invalid'
+      OnClick = btnInvalidClick
+      TabOrder = 1
+    end
+  end
+  object pnlControl: TPanel
+    Left = 0
+    Height = 239
+    Top = 353
+    Width = 485
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 239
+    ClientWidth = 485
+    TabOrder = 2
+    object memResults: TMemo
+      Left = 0
+      Height = 207
+      Top = 32
+      Width = 485
+      Align = alClient
+      Lines.Strings = (
+        ''
+      )
+      ScrollBars = ssAutoBoth
+      TabOrder = 0
+    end
+    object pnlCommands: TPanel
+      Left = 0
+      Height = 32
+      Top = 0
+      Width = 485
+      Align = alTop
+      BevelOuter = bvNone
+      ClientHeight = 32
+      ClientWidth = 485
+      TabOrder = 1
+      object cboCommand: TComboBox
+        Left = 12
+        Height = 23
+        Top = 5
+        Width = 356
+        ItemHeight = 15
+        ItemIndex = 0
+        Items.Strings = (
+          'get_audio_bitrate'
+          'get_audio_bitrate'
+          'get_audio_samples'
+          'get_file_name'
+          'get_meta_comment'
+          'get_time_length'
+          'get_time_pos'
+          'get_video_bitrate'
+          'get_video_codec'
+          'get_video_resolution'
+          'mute '
+          'stop'
+          'osd [level]'
+          'osd_show_progression'
+          'osd_show_text <string> [duration] [level]'
+          'exit'
+          'frame_step'
+          'seek <seconds_From_Start> 2'
+          'seek <percent> 1'
+          'screenshot 0'
+          'speed_mult <value>'
+          'get_property <property>'
+          'set_property <property> <value>'
+        )
+        TabOrder = 0
+        Text = 'get_audio_bitrate'
+      end
+      object btnRunCommand: TButton
+        Left = 376
+        Height = 25
+        Top = 4
+        Width = 91
+        Caption = 'Run Command'
+        OnClick = btnRunCommandClick
+        TabOrder = 1
+      end
+    end
+  end
+  object Splitter1: TSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 5
+    Top = 348
+    Width = 485
+    Align = alBottom
+    ResizeAnchor = akBottom
+  end
+  object OpenDialog1: TOpenDialog
+    left = 32
+    top = 56
+  end
+end
