@@ -261,17 +261,6 @@ begin
         Handle := 0;
     end;
   end;
-  if (Not Running) and (FCanvas<>nil) then begin
-    with FCanvas do begin
-      if Message.DC <> 0 then
-        Handle := Message.DC;
-      Brush.Color:=clBlack;
-      Pen.Color:=clBlack;
-      Rectangle(0,0,Self.Width-1,Self.Height-1);
-      if Message.DC <> 0 then
-        Handle := 0;
-    end;
-  end;
   Exclude(FControlState, csCustomPaint);
 end;
 
@@ -396,11 +385,8 @@ constructor TCustomMPlayerControl.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   ControlStyle:=ControlStyle-[csSetCaption];
-  if (csDesigning in ComponentState) then begin
-    FCanvas := TControlCanvas.Create;
-    TControlCanvas(FCanvas).Control := Self;
-  end else
-    FCompStyle:=csNonLCL;
+  FCanvas := TControlCanvas.Create;
+  TControlCanvas(FCanvas).Control := Self;
   SetInitialBounds(0, 0, 160, 90);
 
   fMPlayerPath:='mplayer'+GetExeExt;
@@ -468,13 +454,21 @@ begin
 
   fPlayerProcess:=TProcessUTF8.Create(Self);
   fPlayerProcess.Options:=fPlayerProcess.Options+[poUsePipes,poNoConsole];
-  //sTemp := ExePath+' -slave -quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+StrToCmdLineParam(Filename);
+
+  //StrToCmdLineParam doesn't work as expected under Windows, and possibly doesn't
+  //work as expected under Linux
+  //TODO: Find the correct way of escaping filenames under both Linux and Windows
+  // (For windows it's sufficent to wrap the filename in "")
+  //fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+StrToCmdLineParam(Filename);
+
   { -quiet              : supress most messages
     -msglevel global=6  : required for EOF signal when playing stops
-    -wid                : sets Window ID
-  }
+    -wid                : sets Window ID     }
   fPlayerProcess.CommandLine:=ExePath+' -slave -quiet -msglevel global=6 -noconfig all -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;
+
+  // -really-quiet causes the video player to not connect to -wid.  Odd...
   //fPlayerProcess.CommandLine:=ExePath+' -slave −really−quiet -wid '+IntToStr(CurWindowID)+' '+StartParam+' '+Filename;;
+
   DebugLn(['TCustomMPlayerControl.Play ',fPlayerProcess.CommandLine]);
 
   fPlayerProcess.Execute;
@@ -509,7 +503,18 @@ end;
 
 procedure TCustomMPlayerControl.EraseBackground(DC: HDC);
 begin
-  if DC=0 then ;
+  If (Not Running) and (FCanvas<>nil) then
+  begin
+    with FCanvas do begin
+      if DC <> 0 then
+        Handle := DC;
+      Brush.Color:=clLtGray;
+      Rectangle(0,0,Self.Width,Self.Height);
+      if DC <> 0 then
+        Handle := 0;
+    end;
+  end;
+  // else
   // everything is painted, so erasing the background is not needed
 end;
 
