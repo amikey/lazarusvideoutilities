@@ -27,6 +27,11 @@ object frmMain: TfrmMain
       Align = alClient
       Loop = 0
       Volume = 0
+      OnFeedback = OnFeedback
+      OnError = OnError
+      OnPlaying = OnPlaying
+      OnPlay = OnPlay
+      OnStop = OnStop
     end
     object pnlTrackbar: TPanel
       Left = 0
