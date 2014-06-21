@@ -44,10 +44,10 @@ Type
     TrackBarPlaying: TTrackBar;
     TrackBarVolume: TTrackBar;
     Procedure btnLoadClick(Sender: TObject);
-    procedure btnPauseClick(Sender: TObject);
-    procedure btnPlayClick(Sender: TObject);
+    Procedure btnPauseClick(Sender: TObject);
+    Procedure btnPlayClick(Sender: TObject);
     Procedure btnRunCommandClick(Sender: TObject);
-    procedure btnStopClick(Sender: TObject);
+    Procedure btnStopClick(Sender: TObject);
     Procedure FormCreate(Sender: TObject);
     Procedure OnError(ASender: TObject; AStrings: TStringList);
     Procedure OnFeedback(ASender: TObject; AStrings: TStringList);
@@ -56,10 +56,12 @@ Type
     Procedure OnStop(Sender: TObject);
     Procedure TrackBarPlayingChange(Sender: TObject);
 
-      procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
 
-        procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure TrackBarVolumeChange(Sender: TObject);
+    Procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarVolumeChange(Sender: TObject);
   Private
     Function GetUpdatingPosition: Boolean;
     Procedure SetUpdatingPosition(AValue: Boolean);
@@ -95,11 +97,12 @@ Begin
 
   //MPlayerControl1.MPlayerPath := 'B:\Code\Compile\mplayer-svn-37216\mplayer.exe';
   {$IFDEF Linux}
-   MPlayerControl1.MPlayerPath:='';
-   MPlayerControl1.StartParam:='-vo x11 -zoom -fs';
+  MPlayerControl1.MPlayerPath := '';
+  MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
   {$else $IFDEF Windows}
-  MPlayerControl1.MPlayerPath := IncludeTrailingBackslash(ExtractFileDir(Application.ExeName))+'..\mplayer-win\mplayer.exe';
-  MPlayerControl1.StartParam:='-zoom -fs';
+  MPlayerControl1.MPlayerPath :=
+    IncludeTrailingBackslash(ExtractFileDir(Application.ExeName)) + '..\mplayer-win\mplayer.exe';
+  MPlayerControl1.StartParam := '-zoom -fs';
   //MPlayerControl1.StartParam := '-vf screenshot';
   {$ENDIF}
 End;
@@ -115,16 +118,16 @@ Begin
   End;
 End;
 
-procedure TfrmMain.btnPauseClick(Sender: TObject);
-begin
+Procedure TfrmMain.btnPauseClick(Sender: TObject);
+Begin
   MPlayerControl1.Paused := Not MPlayerControl1.Paused;
   btnPause.Down := MPlayerControl1.Paused;
-end;
+End;
 
-procedure TfrmMain.btnPlayClick(Sender: TObject);
-begin
+Procedure TfrmMain.btnPlayClick(Sender: TObject);
+Begin
   MPlayerControl1.Play;
-end;
+End;
 
 Procedure TfrmMain.btnRunCommandClick(Sender: TObject);
 Begin
@@ -132,10 +135,10 @@ Begin
   MPlayerControl1.SendMPlayerCommand(cboCommand.Text);
 End;
 
-procedure TfrmMain.btnStopClick(Sender: TObject);
-begin
+Procedure TfrmMain.btnStopClick(Sender: TObject);
+Begin
   MPlayerControl1.Stop;
-end;
+End;
 
 Procedure TfrmMain.OnFeedback(ASender: TObject; AStrings: TStringList);
 Begin
@@ -157,29 +160,30 @@ Procedure TfrmMain.OnPlaying(ASender: TObject; APosition: Single);
 Begin
   If (MPlayerControl1.Duration <> -1) Then
   Begin
-    UpdatingPosition:=True;
+    UpdatingPosition := True;
     Try
       btnPause.Down := MPlayerControl1.Paused;
 
       TrackBarPlaying.SelEnd := Trunc(TrackBarPlaying.Max * APosition / MPlayerControl1.Duration);
-      If ActiveControl<>TrackBarPlaying Then
+      If ActiveControl <> TrackBarPlaying Then
         TrackBarPlaying.Position := TrackBarPlaying.SelEnd;
 
-      lblPos.Caption := FormatDateTime('nnn:ss', APosition / (24 * 60 * 60)) + ' / '+
-                        FormatDateTime('nnn:ss', MPlayerControl1.Duration / (24 * 60 * 60));
+      lblPos.Caption := FormatDateTime('nnn:ss', APosition / (24 * 60 * 60)) +
+        ' / ' + FormatDateTime('nnn:ss', MPlayerControl1.Duration / (24 * 60 * 60));
 
       pnlPos.Width := lblPos.Width + 3;
 
       // Reversed := True doesn't seem to apply for SelStart/SelEnd...
       // TODO: Talk about on Forum/Consider lodging item on Bugtracker...
       TrackBarVolume.SelEnd := TrackBarVolume.Max;
-      TrackBarVolume.SelStart := TrackBarVolume.Max - Trunc(TrackBarVolume.Max * MPlayerControl1.Volume / 100);
+      TrackBarVolume.SelStart := TrackBarVolume.Max - Trunc(TrackBarVolume.Max *
+        MPlayerControl1.Volume / 100);
 
-      If ActiveControl<>TrackBarVolume Then
+      If ActiveControl <> TrackBarVolume Then
         TrackBarVolume.Position := TrackBarVolume.SelEnd - TrackBarVolume.SelStart;
-    finally
-      UpdatingPosition:=False;
-    end;
+    Finally
+      UpdatingPosition := False;
+    End;
   End;
 End;
 
@@ -188,31 +192,34 @@ Begin
   If (MPlayerControl1.Duration <> -1) And Not UpdatingPosition Then
     If TrackBarPlaying.Position <> FLastPosition Then
     Begin
-      MPlayerControl1.Position := MPlayerControl1.Duration * TrackBarPlaying.Position / TrackBarPlaying.Max;
+      MPlayerControl1.Position := MPlayerControl1.Duration * TrackBarPlaying.Position /
+        TrackBarPlaying.Max;
       FLastPosition := TrackBarPlaying.Position;
     End;
 End;
 
-procedure TfrmMain.TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
+Procedure TfrmMain.TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+Begin
   MPlayerControl1.Paused := True;
-end;
+End;
 
-procedure TfrmMain.TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
+Procedure TfrmMain.TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton;
+  Shift: TShiftState; X, Y: Integer);
+Begin
   MPlayerControl1.Paused := False;
   Self.ActiveControl := memResults;
-end;
+End;
 
-procedure TfrmMain.TrackBarVolumeChange(Sender: TObject);
-begin
-  If (TrackBarVolume.Position<>TrackBarVolume.Tag) And Not UpdatingPosition Then
-  begin
+Procedure TfrmMain.TrackBarVolumeChange(Sender: TObject);
+Begin
+  If (TrackBarVolume.Position <> TrackBarVolume.Tag) And Not UpdatingPosition Then
+  Begin
     MPlayerControl1.Volume := Trunc(100 * TrackBarVolume.Position / TrackBarVolume.Max);
 
     TrackBarVolume.Tag := TrackBarVolume.Position;
-  end;
-end;
+  End;
+End;
 
 Function TfrmMain.GetUpdatingPosition: Boolean;
 Begin
@@ -230,7 +237,7 @@ End;
 Procedure TfrmMain.OnPlay(Sender: TObject);
 Begin
   memResults.Lines.Add('OnPlay message received');
-  StatusBar1.SimpleText := 'Playing '+MPlayerControl1.Filename;
+  StatusBar1.SimpleText := 'Playing ' + MPlayerControl1.Filename;
 
   btnStop.Enabled := MPlayerControl1.Running;
   btnPause.Enabled := MPlayerControl1.Running;
