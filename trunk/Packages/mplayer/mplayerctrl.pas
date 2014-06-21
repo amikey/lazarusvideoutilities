@@ -446,7 +446,7 @@ Begin
               // clear this response from the queue
               FOutList.Delete(i);
             End
-            Else If FRequestVolume And (sProperty = 'volume') Then
+            Else If {FRequestVolume And }(sProperty = 'volume') Then
             Begin
               FVolume := Trunc(0.5 + StrToFloatDef(sValue, 100));
               FRequestVolume := False;
