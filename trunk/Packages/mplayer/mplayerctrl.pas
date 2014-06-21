@@ -52,9 +52,12 @@ TODO
                 means there is no reason for this to be exposed...)
               Find out if AnsiQuotedStr breaks unicode filenames
               Find out if AnsiQuotedStr works under Linux (files with spaces or " in filename)
-              set Volume on Play
+              Set Volume on Play
               Find out what happens if Volume <0 or >100
-
+              Fix repeated requests for Pause in TimerEvent
+              Stop requesting Position every TimerEvent, instead only run every 500mS
+              What to do with ANS_ERROR=PROPERTY_UNAVAILABLE?  (ie, volume when playing text file)
+              Change exising commands (ie "volume") to their set_property equivalent
 }
 Unit MPlayerCtrl;
 
