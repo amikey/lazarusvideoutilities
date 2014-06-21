@@ -85,20 +85,23 @@ Begin
   FLastPosition := -1;
   TrackBarPlaying.Max := 50;
 
-  MPlayerControl1.OnFeedback := @OnFeedback;
-  MPlayerControl1.OnError := @OnError;
-  MPlayerControl1.OnPlaying := @OnPlaying;
-  MPlayerControl1.OnPlay := @OnPlay;
-  MPlayerControl1.OnStop := @OnStop;
+  //MPlayerControl1.OnFeedback := @OnFeedback;
+  //MPlayerControl1.OnError := @OnError;
+  //MPlayerControl1.OnPlaying := @OnPlaying;
+  //MPlayerControl1.OnPlay := @OnPlay;
+  //MPlayerControl1.OnStop := @OnStop;
 
   MPlayerControl1.Volume := 50;
 
   //MPlayerControl1.MPlayerPath := 'B:\Code\Compile\mplayer-svn-37216\mplayer.exe';
-  {$IFDEF WINDOWS}
+  {$IFDEF Linux}
+   MPlayerControl1.MPlayerPath:='';
+   MPlayerControl1.StartParam:='-vo x11 -zoom -fs';
+  {$else $IFDEF Windows}
   MPlayerControl1.MPlayerPath := IncludeTrailingBackslash(ExtractFileDir(Application.ExeName))+'..\mplayer-win\mplayer.exe';
-  {$ENDIF}
-
+  MPlayerControl1.StartParam:='-zoom -fs';
   //MPlayerControl1.StartParam := '-vf screenshot';
+  {$ENDIF}
 End;
 
 Procedure TfrmMain.btnLoadClick(Sender: TObject);
@@ -198,6 +201,7 @@ end;
 procedure TfrmMain.TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   MPlayerControl1.Paused := False;
+  Self.ActiveControl := memResults;
 end;
 
 procedure TfrmMain.TrackBarVolumeChange(Sender: TObject);
