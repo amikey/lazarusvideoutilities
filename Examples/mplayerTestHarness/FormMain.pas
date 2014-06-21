@@ -169,6 +169,7 @@ Begin
       pnlPos.Width := lblPos.Width + 3;
 
       // Reversed := True doesn't seem to apply for SelStart/SelEnd...
+      // TODO: Talk about on Forum/Consider lodging item on Bugtracker...
       TrackBarVolume.SelEnd := TrackBarVolume.Max;
       TrackBarVolume.SelStart := TrackBarVolume.Max - Trunc(TrackBarVolume.Max * MPlayerControl1.Volume / 100);
 

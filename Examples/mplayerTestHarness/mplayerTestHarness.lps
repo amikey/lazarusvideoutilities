@@ -20,8 +20,8 @@
         <UnitName Value="FormMain"/>
         <EditorIndex Value="0"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="80"/>
-        <CursorPos X="37" Y="118"/>
+        <TopLine Value="212"/>
+        <CursorPos X="30" Y="224"/>
         <UsageCount Value="56"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -146,11 +146,11 @@
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="0"/>
-        <TopLine Value="97"/>
-        <CursorPos X="58" Y="56"/>
+        <TopLine Value="25"/>
+        <CursorPos X="1" Y="61"/>
         <UsageCount Value="19"/>
         <Bookmarks Count="1">
-          <Item0 X="1" Y="607" ID="1"/>
+          <Item0 X="1" Y="610" ID="1"/>
         </Bookmarks>
         <Loaded Value="True"/>
       </Unit16>
