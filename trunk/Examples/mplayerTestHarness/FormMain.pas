@@ -94,8 +94,12 @@ Begin
   MPlayerControl1.Volume := 50;
 
   //MPlayerControl1.MPlayerPath := 'B:\Code\Compile\mplayer-svn-37216\mplayer.exe';
-  MPlayerControl1.MPlayerPath := 'B:\Code\Compile\mplayer\mplayer.exe';
-  MPlayerControl1.StartParam := '-vf screenshot';
+  MPlayerControl1.MPlayerPath := IncludeTrailingBackslash(ExtractFileDir(Application.ExeName))+
+    IncludeTrailingBackslash('..')+
+    IncludeTrailingBackslash('mplayer')+
+    'mplayer.exe';
+
+  //MPlayerControl1.StartParam := '-vf screenshot';
 End;
 
 Procedure TfrmMain.btnLoadClick(Sender: TObject);

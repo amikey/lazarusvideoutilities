@@ -47,11 +47,13 @@ TODO
               Consider descending control from TGraphicControl (instead of creating FCanvas)
               Add Rate(dRate)
               Add StepForward(increment), Stepback(increment)
-              Add FrameGrab
+              Add FrameGrab (and OnFrameGrab)
               Hide PlayerProcess (OnFeedback/OnError events + Running property
-                means there is no reason for this to be exposed...
+                means there is no reason for this to be exposed...)
               Find out if AnsiQuotedStr breaks unicode filenames
               Find out if AnsiQuotedStr works under Linux (files with spaces or " in filename)
+              set Volume on Play
+              Find out what happens if Volume <0 or >100
 
 }
 Unit MPlayerCtrl;

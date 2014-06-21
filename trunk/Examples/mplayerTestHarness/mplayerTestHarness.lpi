@@ -56,11 +56,11 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="$(TestDir)\$NameOnly($(ProjFile))\mplayerTestHarness"/>
+      <Filename Value="$NameOnly($(ProjFile))"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <UnitOutputDirectory Value="$(TestDir)\lib\$(TargetCPU)-$(TargetOS)\$NameOnly($(ProjFile))"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\$NameOnly($(ProjFile))"/>
     </SearchPaths>
     <Linking>
       <Options>
