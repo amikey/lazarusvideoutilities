@@ -1,0 +1,50 @@
+Available msg modules:
+   global     - common player errors/information
+   cplayer    - console player (mplayer.c)
+   gplayer    - gui player
+   vo         - libvo
+   ao         - libao
+   demuxer    - demuxer.c (general stuff)
+   ds         - demux stream (add/read packet etc)
+   demux      - fileformat-specific stuff (demux_*.c)
+   header     - fileformat-specific header (*header.c)
+   avsync     - mplayer.c timer stuff
+   autoq      - mplayer.c auto-quality stuff
+   cfgparser  - cfgparser.c
+   decaudio   - av decoder
+   decvideo
+   seek       - seeking code
+   win32      - win32 dll stuff
+   open       - open.c (stream opening)
+   dvd        - open.c (DVD init/read/seek)
+   parsees    - parse_es.c (mpeg stream parser)
+   lirc       - lirc_mp.c and input lirc driver
+   stream     - stream.c
+   cache      - cache2.c
+   mencoder
+   xacodec    - XAnim codecs
+   tv         - TV input subsystem
+   osdep      - OS-dependent parts
+   spudec     - spudec.c
+   playtree   - Playtree handling (playtree.c, playtreeparser.c)
+   input
+   vfilter
+   osd
+   network
+   cpudetect
+   codeccfg
+   sws
+   vobsub
+   subreader
+   osd-menu   - OSD menu messages
+   afilter    - Audio filter messages
+   netst      - Netstream
+   muxer      - muxer layer
+   identify   - identify output
+   ass        - libass messages
+   statusline - playback/encoding status line
+   fixme      - messages not yet fixed to map to module
+
+MPlayer Redxii-SVN-r37216-4.8.2 (i686) (C) 2000-2014 MPlayer Team
+Compiled against FFmpeg version N-63644-ge1bd40f
+Build date: Sat May 31 22:08:38 EDT 2014
