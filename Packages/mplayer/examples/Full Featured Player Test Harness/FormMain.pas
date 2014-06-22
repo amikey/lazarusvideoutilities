@@ -87,15 +87,8 @@ Begin
   FLastPosition := -1;
   TrackBarPlaying.Max := 50;
 
-  //MPlayerControl1.OnFeedback := @OnFeedback;
-  //MPlayerControl1.OnError := @OnError;
-  //MPlayerControl1.OnPlaying := @OnPlaying;
-  //MPlayerControl1.OnPlay := @OnPlay;
-  //MPlayerControl1.OnStop := @OnStop;
-
   MPlayerControl1.Volume := 50;
 
-  //MPlayerControl1.MPlayerPath := 'B:\Code\Compile\mplayer-svn-37216\mplayer.exe';
   {$IFDEF Linux}
   MPlayerControl1.MPlayerPath := '';
   MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
