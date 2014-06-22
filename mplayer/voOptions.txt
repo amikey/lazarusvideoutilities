@@ -1,0 +1,23 @@
+MPlayer Redxii-SVN-r37216-4.8.2 (i686) (C) 2000-2014 MPlayer Team
+Compiled against FFmpeg version N-63644-ge1bd40f
+Build date: Sat May 31 22:08:38 EDT 2014
+Available video output drivers:
+	directx	Directx DDraw YUV/RGB/BGR renderer
+	direct3d	Direct3D 9 Renderer
+	gl_nosw	OpenGL no software rendering
+	sdl	SDL YUV/RGB/BGR renderer (SDL v1.1.7+ only!)
+	gl	OpenGL
+	gl_tiled	X11 (OpenGL) - multiple textures version
+	matrixview	MatrixView (OpenGL)
+	caca	libcaca
+	null	Null video output
+	mpegpes	MPEG-PES file
+	yuv4mpeg	yuv4mpeg output for mjpegtools
+	png	PNG file
+	jpeg	JPEG file
+	gif89a	animated GIF output
+	tga	Targa output
+	pnm	PPM/PGM/PGMYUV file
+	md5sum	md5sum of each frame
+	mng	MNG file
+
