@@ -15,7 +15,10 @@ Type
   TfrmMain = Class(TForm)
     btnRunCommand: TButton;
     cboCommand: TComboBox;
+    cboStartParams: TComboBox;
     ilTools: TImageList;
+    lblStartParams: TLabel;
+    lblCommand: TLabel;
     lblPos: TLabel;
     memResults: TMemo;
     MPlayerControl1: TMPlayerControl;
@@ -65,6 +68,8 @@ Type
   Private
     Function GetUpdatingPosition: Boolean;
     Procedure SetUpdatingPosition(AValue: Boolean);
+
+    Procedure PopulateCommands(ARunning: Boolean);
   Private
     FUpdatingPosition: Integer;
     FLastPosition: Integer;
@@ -93,14 +98,19 @@ Begin
   MPlayerControl1.MPlayerPath := '';
   MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
   {$else $IFDEF Windows}
-  // Download MPlayer generic for Windows and save under Programm Folder Directory
+
+  // Download MPlayer generic for Windows and save under Program Folder Directory
+  // Or add to %PATH% environment folder
   // http://sourceforge.net/projects/mplayer-win32/
-  MPlayerControl1.MPlayerPath :=
-    IncludeTrailingBackslash(ExtractFileDir(Application.ExeName)) + 'mplayer\mplayer.exe';
+  If Not MPlayerControl1.FindMPlayerPath Then
+    MPlayerControl1.MPlayerPath :=
+      IncludeTrailingBackslash(ExtractFileDir(Application.ExeName)) + 'mplayer\mplayer.exe';
   MPlayerControl1.StartParam := '-vo gl_nosw';
   //MPlayerControl1.StartParam := '-vo direct3d';
   //MPlayerControl1.StartParam := '-vf screenshot';
   {$ENDIF}
+
+  PopulateCommands(False);
 End;
 
 Procedure TfrmMain.btnLoadClick(Sender: TObject);
@@ -109,8 +119,11 @@ Begin
   Begin
     MPlayerControl1.Stop;
     memResults.Lines.Clear;
+    MPlayerControl1.StartParam := cboStartParams.Text;
     MPlayerControl1.Filename := OpenDialog1.Filename;
     MPlayerControl1.Play;
+
+    btnPlay.Enabled := True;
   End;
 End;
 
@@ -126,9 +139,21 @@ Begin
 End;
 
 Procedure TfrmMain.btnRunCommandClick(Sender: TObject);
+Var
+  sOutput: String;
 Begin
-  memResults.Lines.Add(cboCommand.Text);
-  MPlayerControl1.SendMPlayerCommand(cboCommand.Text);
+  If MPlayerControl1.Running Then
+  Begin
+    memResults.Lines.Add(cboCommand.Text);
+
+    MPlayerControl1.SendMPlayerCommand(cboCommand.Text);
+  End
+  Else
+  Begin
+    memResults.Lines.Add(MplayerControl1.MPlayerPath + ' ' + cboCommand.Text);
+    sOutput := RunEx(MplayerControl1.MPlayerPath + ' ' + cboCommand.Text);
+    memResults.Append(sOutput);
+  End;
 End;
 
 Procedure TfrmMain.btnStopClick(Sender: TObject);
@@ -230,6 +255,46 @@ Begin
     Dec(FUpdatingPosition);
 End;
 
+Procedure TfrmMain.PopulateCommands(ARunning: Boolean);
+Begin
+  cboCommand.Items.Clear;
+  If ARunning Then
+  Begin
+    lblCommand.Caption := 'Input Commands';
+    cboCommand.Items.Add('get_audio_bitrate');
+    cboCommand.Items.Add('get_audio_codec');
+    cboCommand.Items.Add('get_audio_samples');
+    cboCommand.Items.Add('get_file_name');
+    cboCommand.Items.Add('get_meta_comment');
+    cboCommand.Items.Add('get_time_length');
+    cboCommand.Items.Add('get_time_pos');
+    cboCommand.Items.Add('get_video_bitrate');
+    cboCommand.Items.Add('get_video_codec');
+    cboCommand.Items.Add('get_video_resolution');
+    cboCommand.Items.Add('mute');
+    cboCommand.Items.Add('stop');
+    cboCommand.Items.Add('osd [level]');
+    cboCommand.Items.Add('osd_show_progression');
+    cboCommand.Items.Add('osd_show_text <string> [duration] [level]');
+    cboCommand.Items.Add('exit');
+    cboCommand.Items.Add('frame_step');
+    cboCommand.Items.Add('seek <seconds_From_Start> 2');
+    cboCommand.Items.Add('seek <percent> 1');
+    cboCommand.Items.Add('screenshot 0');
+    cboCommand.Items.Add('speed_mult <value>');
+    cboCommand.Items.Add('get_property <property>');
+    cboCommand.Items.Add('set_property <property> <value>');
+  End
+  Else
+  Begin
+    lblCommand.Caption := 'mplayer Parameters';
+    cboCommand.Items.Add('-help');
+    cboCommand.Items.Add('-vo help');
+    cboCommand.Items.Add('-input cmdlist');
+  End;
+  cboCommand.ItemIndex := 0;
+End;
+
 Procedure TfrmMain.OnPlay(Sender: TObject);
 Begin
   memResults.Lines.Add('OnPlay message received');
@@ -237,6 +302,11 @@ Begin
 
   btnStop.Enabled := MPlayerControl1.Running;
   btnPause.Enabled := MPlayerControl1.Running;
+
+  lblStartParams.Enabled := Not MPlayerControl1.Running;
+  cboStartParams.Enabled := Not MPlayerControl1.Running;
+
+  PopulateCommands(MPlayerControl1.Running);
 End;
 
 Procedure TfrmMain.OnStop(Sender: TObject);
@@ -258,7 +328,12 @@ Begin
   btnStop.Enabled := MPlayerControl1.Running;
   btnPause.Enabled := MPlayerControl1.Running;
 
+  lblStartParams.Enabled := Not MPlayerControl1.Running;
+  cboStartParams.Enabled := Not MPlayerControl1.Running;
+
   lblPos.Caption := '';
+
+  PopulateCommands(MPlayerControl1.Running);
 End;
 
 End.
