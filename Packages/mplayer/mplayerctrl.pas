@@ -42,6 +42,9 @@ Changes:
                 - StrToCmdParam didn't work under Windows - wrapped filename in ', Windows needed "
               Persisted FCanvas outside of IDE to prevent painting issues when no file playing
                 by Mike Thompson
+
+  2014-06-24  Added FindMPlayerPath (Refactored code from existing Play)
+
 TODO
   2014-06-21
               EXTENSIVE TESTING UNDER LINUX
@@ -144,6 +147,8 @@ type
     procedure Invalidate; override;
     procedure EraseBackground(DC: HDC); override;
   public
+    function FindMPlayerPath : Boolean;
+
     property Filename: string read FFilename write SetFilename;
     property StartParam: string read FStartParam write SetStartParam;
     property MPlayerPath: string read FMPlayerPath write SetMPlayerPath;
@@ -197,6 +202,7 @@ type
   {$endif}
 
 procedure Register;
+Function RunEx(sCommandLine: String; bRedirectErr: Boolean = False): String;
 
 implementation
 
@@ -213,6 +219,79 @@ begin
 
   Result := Copy(AInput, Length(AIdentifier) + 1, Length(AInput) - Length(AIdentifier));
 end;
+
+// Derived from http://wiki.freepascal.org/Executing_External_Programs#Reading_large_output
+Function RunEx(sCommandLine: String; bRedirectErr: Boolean = False): String;
+Const
+  READ_BYTES = 2048;
+Var
+  oStrings: TStringList;
+  oStream: TMemoryStream;
+  oProcess: TProcess;
+  iNumBytes: Longint;
+  iBytesRead: Longint;
+Begin
+  // A temp Memorystream is used to buffer the output
+  oStream := TMemoryStream.Create;
+  iBytesRead := 0;
+  Try
+    oProcess := TProcess.Create(nil);
+    Try
+      oProcess.CommandLine := sCommandLine;
+
+      // We cannot use poWaitOnExit here since we don't
+      // know the size of the output. On Linux the size of the
+      // output pipe is 2 kB; if the output data is more, we
+      // need to read the data. This isn't possible since we are
+      // waiting. So we get a deadlock here if we use poWaitOnExit.
+      If bRedirectErr Then
+        oProcess.Options := [poNoConsole, poUsePipes, poStderrToOutPut]
+      Else
+        oProcess.Options := [poNoConsole, poUsePipes];
+
+      oProcess.Execute;
+      While oProcess.Running Do
+      Begin
+        // make sure we have room
+        oStream.SetSize(iBytesRead + READ_BYTES);
+
+        // try reading it
+        iNumBytes := oProcess.Output.Read((oStream.Memory + iBytesRead)^, READ_BYTES);
+        If iNumBytes > 0 Then
+          Inc(iBytesRead, iNumBytes)
+        Else
+          Sleep(100)// no data, wait 100 ms
+        ;
+      End;
+
+      // read last part
+      Repeat
+        // make sure we have room
+        oStream.SetSize(iBytesRead + READ_BYTES);
+
+        // try reading it
+        iNumBytes := oProcess.Output.Read((oStream.Memory + iBytesRead)^, READ_BYTES);
+
+        If iNumBytes > 0 Then
+          Inc(iBytesRead, iNumBytes);
+      Until iNumBytes <= 0;
+
+      oStream.SetSize(iBytesRead);
+
+      oStrings := TStringList.Create;
+      Try
+        oStrings.LoadFromStream(oStream);
+        Result := oStrings.Text;
+      Finally
+        oStrings.Free;
+      End;
+    Finally
+      oProcess.Free;
+    End;
+  Finally
+    oStream.Free;
+  End;
+End;
 
 { TCustomMPlayerControl }
 
@@ -448,9 +527,29 @@ begin
   Result:=(fPlayerProcess<>nil) and fPlayerProcess.Running;
 end;
 
+function TCustomMPlayerControl.FindMPlayerPath: Boolean;
+var
+  ExePath: string;
+begin
+  result := FileExistsUTF8(FMPlayerPath);
+
+  If not result then
+  begin
+    if FMPlayerPath='' then
+      FMPlayerPath:='mplayer'+GetExeExt;
+    ExePath:=FMPlayerPath;
+    if not FilenameIsAbsolute(ExePath) then
+      ExePath:=FindDefaultExecutablePath(ExePath);
+    if FileExistsUTF8(ExePath) then
+    begin
+      FMPlayerPath:=ExePath;
+      result := true;
+    end;
+  end;
+end;
+
 procedure TCustomMPlayerControl.Play;
 var
-  ExePath: String;
   CurWindowID: PtrUInt;
 begin
   if (csDesigning in ComponentState) then exit;
@@ -471,12 +570,7 @@ begin
     FreeAndNil(fPlayerProcess);
 //    raise Exception.Create('TCustomMPlayerControl.Play fPlayerProcess still exists');
 
-  if MPlayerPath='' then
-    MPlayerPath:='mplayer'+GetExeExt;
-  ExePath:=MPlayerPath;
-  if not FilenameIsAbsolute(ExePath) then
-    ExePath:=FindDefaultExecutablePath(ExePath);
-  if not FileExistsUTF8(ExePath) then
+  if not FindMPlayerPath then
     raise Exception.Create(MPlayerPath+' not found');
 
   {$IFDEF Linux}
@@ -499,7 +593,7 @@ begin
   // -vo direct3d        : uses Direct3D renderer (recommended under windows)
   // -vo gl_nosw         : uses OpenGL no software renderer
   FPlayerProcess.CommandLine :=
-    ExePath + ' -slave -quiet -wid ' + IntToStr(CurWindowID) +
+    FMPlayerPath + ' -slave -quiet -wid ' + IntToStr(CurWindowID) +
     ' ' + StartParam + ' ' + AnsiQuotedStr(Filename, '"');
 
   DebugLn(['TCustomMPlayerControl.Play ', FPlayerProcess.CommandLine]);
