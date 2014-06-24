@@ -1,4 +1,4 @@
-unit Unit1; 
+unit Unit1;
 
 {$mode objfpc}{$H+}
 
@@ -31,9 +31,11 @@ type
   end;
 
 var
-  Form1: TForm1; 
+  Form1: TForm1;
 
 implementation
+
+{$R *.lfm}
 
 { TForm1 }
 
@@ -82,9 +84,6 @@ begin
    //MPlayerControl1.StartParam:='-zoom -fs';
   {$endif}
 end;
-
-initialization
-  {$I unit1.lrs}
 
 end.
 
