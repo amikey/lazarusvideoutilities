@@ -202,7 +202,6 @@ type
   {$endif}
 
 procedure Register;
-Function RunEx(sCommandLine: String; bRedirectErr: Boolean = False): String;
 
 implementation
 
@@ -219,79 +218,6 @@ begin
 
   Result := Copy(AInput, Length(AIdentifier) + 1, Length(AInput) - Length(AIdentifier));
 end;
-
-// Derived from http://wiki.freepascal.org/Executing_External_Programs#Reading_large_output
-Function RunEx(sCommandLine: String; bRedirectErr: Boolean = False): String;
-Const
-  READ_BYTES = 2048;
-Var
-  oStrings: TStringList;
-  oStream: TMemoryStream;
-  oProcess: TProcess;
-  iNumBytes: Longint;
-  iBytesRead: Longint;
-Begin
-  // A temp Memorystream is used to buffer the output
-  oStream := TMemoryStream.Create;
-  iBytesRead := 0;
-  Try
-    oProcess := TProcess.Create(nil);
-    Try
-      oProcess.CommandLine := sCommandLine;
-
-      // We cannot use poWaitOnExit here since we don't
-      // know the size of the output. On Linux the size of the
-      // output pipe is 2 kB; if the output data is more, we
-      // need to read the data. This isn't possible since we are
-      // waiting. So we get a deadlock here if we use poWaitOnExit.
-      If bRedirectErr Then
-        oProcess.Options := [poNoConsole, poUsePipes, poStderrToOutPut]
-      Else
-        oProcess.Options := [poNoConsole, poUsePipes];
-
-      oProcess.Execute;
-      While oProcess.Running Do
-      Begin
-        // make sure we have room
-        oStream.SetSize(iBytesRead + READ_BYTES);
-
-        // try reading it
-        iNumBytes := oProcess.Output.Read((oStream.Memory + iBytesRead)^, READ_BYTES);
-        If iNumBytes > 0 Then
-          Inc(iBytesRead, iNumBytes)
-        Else
-          Sleep(100)// no data, wait 100 ms
-        ;
-      End;
-
-      // read last part
-      Repeat
-        // make sure we have room
-        oStream.SetSize(iBytesRead + READ_BYTES);
-
-        // try reading it
-        iNumBytes := oProcess.Output.Read((oStream.Memory + iBytesRead)^, READ_BYTES);
-
-        If iNumBytes > 0 Then
-          Inc(iBytesRead, iNumBytes);
-      Until iNumBytes <= 0;
-
-      oStream.SetSize(iBytesRead);
-
-      oStrings := TStringList.Create;
-      Try
-        oStrings.LoadFromStream(oStream);
-        Result := oStrings.Text;
-      Finally
-        oStrings.Free;
-      End;
-    Finally
-      oProcess.Free;
-    End;
-  Finally
-    oStream.Free;
-  End;
-End;
 
 { TCustomMPlayerControl }
 
