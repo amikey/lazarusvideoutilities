@@ -6,43 +6,42 @@ Interface
 
 Uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Buttons, ExtCtrls, ComCtrls,
-  StdCtrls, MPlayerCtrl;
+  StdCtrls, MPlayerCtrl, Process;
 
 Type
 
   { TfrmMain }
-
   TfrmMain = Class(TForm)
+    btnFrameGrab: TToolButton;
+    btnFWD: TToolButton;
+    btnLoad: TToolButton;
+    btnNudgeBack: TToolButton;
+    btnNudgeForward: TToolButton;
+    btnPause: TToolButton;
+    btnPlay: TToolButton;
+    btnRewind: TToolButton;
     btnRunCommand: TButton;
+    btnStop: TToolButton;
     cboCommand: TComboBox;
     cboStartParams: TComboBox;
     ilTools: TImageList;
-    lblStartParams: TLabel;
     lblCommand: TLabel;
     lblPos: TLabel;
+    lblStartParams: TLabel;
     memResults: TMemo;
     MPlayerControl1: TMPlayerControl;
     OpenDialog1: TOpenDialog;
-    pnlTrackbar: TPanel;
-    pnlPos: TPanel;
     pnlCommands: TPanel;
     pnlFeedback: TPanel;
+    pnlPos: TPanel;
+    pnlTrackbar: TPanel;
     pnlVideo: TPanel;
     Splitter1: TSplitter;
     StatusBar1: TStatusBar;
     tbMain: TToolBar;
-    btnLoad: TToolButton;
-    btnFrameGrab: TToolButton;
-    btnNudgeBack: TToolButton;
     ToolButton2: TToolButton;
-    btnPlay: TToolButton;
-    btnStop: TToolButton;
-    btnPause: TToolButton;
-    btnNudgeForward: TToolButton;
     ToolButton4: TToolButton;
     ToolButton6: TToolButton;
-    btnRewind: TToolButton;
-    btnFWD: TToolButton;
     ToolButton9: TToolButton;
     TrackBarPlaying: TTrackBar;
     TrackBarVolume: TTrackBar;
@@ -58,12 +57,8 @@ Type
     Procedure OnPlaying(ASender: TObject; APosition: Single);
     Procedure OnStop(Sender: TObject);
     Procedure TrackBarPlayingChange(Sender: TObject);
-
-    Procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-
-    Procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     Procedure TrackBarVolumeChange(Sender: TObject);
   Private
     Function GetUpdatingPosition: Boolean;
@@ -141,6 +136,10 @@ End;
 Procedure TfrmMain.btnRunCommandClick(Sender: TObject);
 Var
   sOutput: String;
+  arrCommands: Array Of String;
+  slCommands: TStringList;
+  i: Integer;
+
 Begin
   If MPlayerControl1.Running Then
   Begin
@@ -150,9 +149,22 @@ Begin
   End
   Else
   Begin
-    memResults.Lines.Add(MplayerControl1.MPlayerPath + ' ' + cboCommand.Text);
-    sOutput := RunEx(MplayerControl1.MPlayerPath + ' ' + cboCommand.Text);
-    memResults.Append(sOutput);
+    slCommands := TStringList.Create;
+    slCommands.Delimiter:=' ';
+    Try
+      CommandToList(cboCommand.Text, slCommands);
+
+      SetLength(arrCommands, slCommands.Count);
+      For i := 0 To slCommands.Count-1 Do
+        arrCommands[i] := slCommands[i];
+
+      RunCommand(MplayerControl1.MPlayerPath, arrCommands, sOutput, [roNoConsole]);
+
+      memResults.Lines.Add(MplayerControl1.MPlayerPath + ' ' + slCommands.DelimitedText);
+      memResults.Append(sOutput);
+    finally
+      slCommands.Free;
+    end;
   End;
 End;
 
