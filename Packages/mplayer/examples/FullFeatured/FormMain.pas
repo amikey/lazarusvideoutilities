@@ -130,6 +130,9 @@ Begin
       MPlayerControl1.MPlayerPath:=dlgFindmplayer.FileName;
   end;
 
+  If Not FileExists(MPlayerControl1.MPlayerPath) Then
+    ShowMessage('mplayer not found!');
+
   If OpenDialog1.Execute Then
   Begin
     MPlayerControl1.Stop;

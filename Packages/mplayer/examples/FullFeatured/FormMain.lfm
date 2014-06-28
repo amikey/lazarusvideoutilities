@@ -615,6 +615,8 @@ object frmMain: TfrmMain
     }
   end
   object dlgFindmplayer: TOpenDialog
+    Title = 'Locate mplayer.exe'
+    Filter = 'mplayer.exe|mplayer.exe'
     Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing]
     left = 175
     top = 183

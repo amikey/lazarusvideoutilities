@@ -52,6 +52,7 @@ Changes:
               Added Rate (Fast Forward only, mplayer doesn't support rewind)
               Only request position updates every ON_PLAYING_INTERVAL
               Set Volume on Play
+              Added GrabImage and OnGrabImage (delay before mplayer grabs image)
 
 TODO
   2014-06-21

@@ -17,24 +17,25 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FormMain"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="1"/>
-        <TopLine Value="91"/>
-        <CursorPos X="28" Y="105"/>
+        <TopLine Value="115"/>
+        <CursorPos X="139" Y="112"/>
         <UsageCount Value="124"/>
         <Bookmarks Count="1">
-          <Item0 Y="257" ID="1"/>
+          <Item0 Y="260" ID="1"/>
         </Bookmarks>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="..\..\mplayerctrl.pas"/>
         <UnitName Value="MPlayerCtrl"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
         <WindowIndex Value="1"/>
-        <TopLine Value="591"/>
-        <CursorPos X="33" Y="604"/>
+        <TopLine Value="611"/>
+        <CursorPos X="53" Y="632"/>
         <UsageCount Value="16"/>
         <Loaded Value="True"/>
       </Unit2>
@@ -396,122 +397,122 @@
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="737" TopLine="715"/>
+        <Caret Line="740" TopLine="718"/>
       </Position1>
       <Position2>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="740" TopLine="718"/>
+        <Caret Line="743" Column="10" TopLine="722"/>
       </Position2>
       <Position3>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="743" Column="10" TopLine="722"/>
+        <Caret Line="642" Column="26" TopLine="631"/>
       </Position3>
       <Position4>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="642" Column="26" TopLine="631"/>
+        <Caret Line="290" TopLine="279"/>
       </Position4>
       <Position5>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="290" TopLine="279"/>
       </Position5>
       <Position6>
         <Filename Value="..\..\mplayerctrl.pas"/>
+        <Caret Line="117" TopLine="94"/>
       </Position6>
       <Position7>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="117" TopLine="94"/>
+        <Caret Line="337" Column="9" TopLine="272"/>
       </Position7>
       <Position8>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="337" Column="9" TopLine="272"/>
+        <Caret Line="554" Column="39" TopLine="542"/>
       </Position8>
       <Position9>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="554" Column="39" TopLine="542"/>
+        <Caret Line="634" Column="25" TopLine="630"/>
       </Position9>
       <Position10>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="634" Column="25" TopLine="630"/>
+        <Caret Line="288" TopLine="275"/>
       </Position10>
       <Position11>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="288" TopLine="275"/>
+        <Caret Line="289" Column="16" TopLine="275"/>
       </Position11>
       <Position12>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="289" Column="16" TopLine="275"/>
+        <Caret Line="288" Column="89" TopLine="275"/>
       </Position12>
       <Position13>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="288" Column="89" TopLine="275"/>
+        <Caret Line="292" Column="27" TopLine="275"/>
       </Position13>
       <Position14>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="292" Column="27" TopLine="275"/>
+        <Caret Line="184" Column="75" TopLine="165"/>
       </Position14>
       <Position15>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="184" Column="75" TopLine="165"/>
-      </Position15>
-      <Position16>
         <Filename Value="FormMain.pas"/>
         <Caret Line="13" Column="26" TopLine="2"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\mplayerctrl.pas"/>
+        <Caret Line="208" Column="69" TopLine="167"/>
       </Position16>
       <Position17>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="208" Column="69" TopLine="167"/>
+        <Caret Line="291" Column="27" TopLine="274"/>
       </Position17>
       <Position18>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="291" Column="27" TopLine="274"/>
+        <Filename Value="FormMain.pas"/>
+        <Caret Line="128" Column="38" TopLine="103"/>
       </Position18>
       <Position19>
         <Filename Value="FormMain.pas"/>
-        <Caret Line="128" Column="38" TopLine="103"/>
+        <Caret Line="150" TopLine="136"/>
       </Position19>
       <Position20>
-        <Filename Value="FormMain.pas"/>
-        <Caret Line="150" TopLine="136"/>
+        <Filename Value="..\..\mplayerctrl.pas"/>
+        <Caret Line="173" Column="14" TopLine="159"/>
       </Position20>
       <Position21>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="173" Column="14" TopLine="159"/>
+        <Caret Line="787" TopLine="782"/>
       </Position21>
       <Position22>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="787" TopLine="782"/>
+        <Caret Line="789" TopLine="782"/>
       </Position22>
       <Position23>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="789" TopLine="782"/>
+        <Caret Line="790" TopLine="782"/>
       </Position23>
       <Position24>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="790" TopLine="782"/>
+        <Caret Line="792" TopLine="782"/>
       </Position24>
       <Position25>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="792" TopLine="782"/>
+        <Caret Line="296" Column="16" TopLine="282"/>
       </Position25>
       <Position26>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="248" TopLine="270"/>
+        <Caret Line="565" Column="42" TopLine="546"/>
       </Position26>
       <Position27>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="296" Column="16" TopLine="282"/>
+        <Caret Line="564" TopLine="552"/>
       </Position27>
       <Position28>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="565" Column="42" TopLine="546"/>
+        <Caret Line="346" Column="34" TopLine="319"/>
       </Position28>
       <Position29>
         <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="564" TopLine="552"/>
+        <Caret Line="56" Column="15" TopLine="157"/>
       </Position29>
       <Position30>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="346" Column="34" TopLine="319"/>
+        <Filename Value="FormMain.pas"/>
+        <Caret Line="100" Column="31" TopLine="91"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>
