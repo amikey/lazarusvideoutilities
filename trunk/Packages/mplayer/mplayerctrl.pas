@@ -44,13 +44,21 @@ Changes:
                 by Mike Thompson
 
   2014-06-24  Added FindMPlayerPath (Refactored code from existing Play)
+  2014-06-28  Extended FindMPlayer to also look for mplayer in a subfolder of the exe
+              Fixed painting issues when playing audio files...
+              Fixed repeated requests for volume in files that don't support volme
+              Changed Process population code in .Play from .CommandLine to use .Executable & .Parameters
+                (incidently, removed the need to use AnsiQuotedStr around Filename under Windows)
+              Added Rate (Fast Forward only, mplayer doesn't support rewind)
+              Only request position updates every ON_PLAYING_INTERVAL
+              Set Volume on Play
 
 TODO
   2014-06-21
               EXTENSIVE TESTING UNDER LINUX
                 - Tested under Linus Mint 16 (MATE) with mplayer installed (not mplayer2)
+              Test new .Parameters under Linux (unicode filename & spaces in filename)
               Consider descending control from TGraphicControl (instead of creating FCanvas)
-              Add Rate(dRate)
               Add StepForward(increment), Stepback(increment)
               Add FrameGrab (and OnFrameGrab)
                 - Requires adding -vf screenshot to initial params
@@ -59,14 +67,7 @@ TODO
                   user defined folder
               Hide PlayerProcess (OnFeedback/OnError events + Running property
                 means there is no reason for this to be exposed... (speak to mattias/six1 first)
-              Find out if AnsiQuotedStr breaks unicode filenames
-              Find out if AnsiQuotedStr works under Linux (files with spaces or " in filename)
-                - Confirmed AnsiQuotedStr worked under Linux Mint 16 (MATE)
-              Set Volume on Play
-              Find out what happens if Volume <0 or >100
               Fix repeated requests for Pause in TimerEvent (Use DoCommand)
-              Stop requesting Position every TimerEvent, instead only run every 500mS
-              What to do with ANS_ERROR=PROPERTY_UNAVAILABLE?  (ie, volume when playing text file)
               Change existing commands (ie "volume") to their set_property equivalent
 }
 unit MPlayerCtrl;
@@ -101,15 +102,18 @@ type
   TCustomMPlayerControl = class(TWinControl)
   private
     FFilename: string;
+    FImagePath: string;
+    FRate: single;
     FStartParam:string;
     FLoop: integer;
     FMPlayerPath: string;
     FPaused: boolean;
-    fPlayerProcess: TProcessUTF8;
-    fTimer: TTimer;
+    FPlayerProcess: TProcessUTF8;
+    FTimer: TTimer;
     FVolume: integer;
     FCanvas: TCanvas;
     FLastPosition: string;
+    FLastTimer: TDateTime;
     FRequestVolume: boolean;
     FDuration: single;
     FOnError: TOnError;
@@ -119,11 +123,14 @@ type
     FOnStop: TNotifyEvent;
     FOutList: TStringList;
     function GetPosition: single;
+    function GetRate: single;
+    procedure SetImagePath(AValue: string);
     procedure SetPosition(AValue: single);
     procedure SetFilename(const AValue: string);
     procedure SetLoop(const AValue: integer);
     procedure SetMPlayerPath(const AValue: string);
     procedure SetPaused(const AValue: boolean);
+    procedure SetRate(AValue: single);
     procedure SetVolume(const AValue: integer);
     procedure SetStartParam(const AValue: string);
     procedure TimerEvent(Sender: TObject);
@@ -149,6 +156,9 @@ type
   public
     function FindMPlayerPath : Boolean;
 
+    procedure GrabImage;
+    function LastImageFilename: String;
+
     property Filename: string read FFilename write SetFilename;
     property StartParam: string read FStartParam write SetStartParam;
     property MPlayerPath: string read FMPlayerPath write SetMPlayerPath;
@@ -157,6 +167,9 @@ type
     property Loop: integer read FLoop write SetLoop; // -1 no, 0 forever, 1 once, 2 twice, ...
     property Volume: integer read FVolume write SetVolume;
 
+    property ImagePath: string read FImagePath write SetImagePath;
+
+    property Rate: single read GetRate write SetRate;
     property Duration: single read FDuration; // seconds
     property Position: single read GetPosition write SetPosition; // seconds
 
@@ -201,9 +214,15 @@ type
   end;
   {$endif}
 
+Const
+  ON_PLAYING_INTERVAL = 500 / (24*60*60*1000);
+
 procedure Register;
 
 implementation
+
+Uses
+  Forms;
 
 procedure Register;
 begin
@@ -231,17 +250,23 @@ var
   iPosEquals: SizeInt;
   sValue: string;
   sProperty: string;
+  iError: Integer;
 
 begin
-  if Running then
+  if FPlayerProcess<>nil then
   begin
-    // Inject a request for current position
-    bFoundPosition := False;
-    if Assigned(FOnPlaying) and not FPaused then
-      SendMPlayerCommand('get_time_pos');
+    If Running And ((Now-FLastTimer)>ON_PLAYING_INTERVAL) Then
+    begin
+      // Inject a request for current position
+      bFoundPosition := False;
+      if Assigned(FOnPlaying) and not FPaused then
+        SendMPlayerCommand('get_time_pos');
+
+      FLastTimer := Now;
+    end;
 
     // Inject a request for Volume level
-    if FRequestVolume then
+    if Running And FRequestVolume then
       SendMPlayerCommand('get_property volume');
 
     if FPlayerProcess.Output.NumBytesAvailable > 0 then
@@ -320,14 +345,29 @@ begin
       try
         ErrList.LoadFromStream(FPlayerProcess.Stderr);
 
+        // Catch error retrieving volume
+        If FRequestVolume Then
+        begin
+          iError := ErrList.IndexOf('Failed to get value of property ''volume''.');
+          If iError<>-1 Then
+          begin
+            Errlist.Delete(iError);
+
+            // Prevent further requests for volume
+            FVolume := 0;
+            FRequestVolume := False;
+          end;
+        end;
+
         if Assigned(FOnError) then
           FOnError(Self, ErrList);
       finally
         ErrList.Free;
       end;
     end;
-  end
-  else
+  end;
+
+  If not Running Then
     Stop;
 end;
 
@@ -367,11 +407,19 @@ begin
 end;
 
 procedure TCustomMPlayerControl.SetFilename(const AValue: string);
+  // Copied from win\process.inc
+  Function MaybeQuoteIfNotQuoted(Const S : String) : String;
+  begin
+    If (Pos(' ',S)<>0) and (pos('"',S)=0) then
+      Result:='"'+S+'"'
+    else
+       Result:=S;
+  end;
 begin
   if FFilename=AValue then exit;
   FFilename:=AValue;
   if Running then
-    SendMPlayerCommand('loadfile '+AnsiQuotedStr(Filename, '"'));
+    SendMPlayerCommand('loadfile '+MaybeQuoteIfNotQuoted(Filename));
 end;
 
 procedure TCustomMPlayerControl.SetLoop(const AValue: integer);
@@ -394,6 +442,16 @@ begin
   if Running then begin
     FPaused:=AValue;
     SendMPlayerCommand('pause');
+  end;
+end;
+
+procedure TCustomMPlayerControl.SetRate(AValue: single);
+begin
+  if FRate=AValue then Exit;
+  if (FRate<0.1) or (FRate>100) then Exit;
+  if Running then begin
+    FRate:=AValue;
+    SendMPlayerCommand(Format('set_property speed %.3f', [FRate]));
   end;
 end;
 
@@ -456,16 +514,24 @@ end;
 function TCustomMPlayerControl.FindMPlayerPath: Boolean;
 var
   ExePath: string;
+  MPlayerExe: String;
 begin
   result := FileExistsUTF8(FMPlayerPath);
 
   If not result then
   begin
+    MPlayerExe:='mplayer'+GetExeExt;
     if FMPlayerPath='' then
-      FMPlayerPath:='mplayer'+GetExeExt;
+      FMPlayerPath:=MPlayerExe;
     ExePath:=FMPlayerPath;
+    // Is mplayer installed in the environment path?
     if not FilenameIsAbsolute(ExePath) then
       ExePath:=FindDefaultExecutablePath(ExePath);
+    // is mplayer in a folder under the application folder?
+    if Not FileExistsUTF8(ExePath) then
+      ExePath := IncludeTrailingBackSlash(ExtractFileDir(Application.ExeName))+
+        IncludeTrailingBackslash('mplayer') + MPlayerExe;
+    // did we find it?
     if FileExistsUTF8(ExePath) then
     begin
       FMPlayerPath:=ExePath;
@@ -474,9 +540,21 @@ begin
   end;
 end;
 
+procedure TCustomMPlayerControl.GrabImage;
+begin
+  if Running then
+    DoCommand();
+end;
+
+function TCustomMPlayerControl.LastImageFilename: String;
+begin
+
+end;
+
 procedure TCustomMPlayerControl.Play;
 var
   CurWindowID: PtrUInt;
+  slStartParams : TStringList;
 begin
   if (csDesigning in ComponentState) then exit;
 
@@ -485,7 +563,13 @@ begin
     exit;
   end;
 
-  if Playing then exit;
+  if Playing then
+  begin
+    if FRate>1 Then
+      Rate := 1;
+
+    exit;
+  end;
 
   {$IFDEF Linux}
   if (not HandleAllocated) then exit;
@@ -518,28 +602,45 @@ begin
   // -zoom -fs           : Unsure:  Only perceptible difference is background drawn black not green
   // -vo direct3d        : uses Direct3D renderer (recommended under windows)
   // -vo gl_nosw         : uses OpenGL no software renderer
-  FPlayerProcess.CommandLine :=
-    FMPlayerPath + ' -slave -quiet -wid ' + IntToStr(CurWindowID) +
-    ' ' + StartParam + ' ' + AnsiQuotedStr(Filename, '"');
+  FPlayerProcess.Executable:=FMPlayerPath;
+  FPlayerProcess.Parameters.Add('-slave');
+  FPlayerProcess.Parameters.Add('-quiet');
+  FPlayerProcess.Parameters.Add('-vf');
+  FPlayerProcess.Parameters.Add('screenshot');
+  FPlayerProcess.Parameters.Add('-wid');
+  FPlayerProcess.Parameters.Add(IntToStr(CurWindowID));
+  slStartParams := TStringList.Create;
+  Try
+    CommandToList(StartParam, slStartParams);
+    FPlayerProcess.Parameters.AddStrings(slStartParams);
+  finally
+    slStartParams.Free;
+  end;
+  FPlayerProcess.Parameters.Add(SysToUTF8(FFilename));
 
-  DebugLn(['TCustomMPlayerControl.Play ', FPlayerProcess.CommandLine]);
+  FPlayerProcess.Parameters.Delimiter:=' ';
+  DebugLn(['TCustomMPlayerControl.Play ', FPlayerProcess.Parameters.DelimitedText]);
 
   // Normally I'd be careful to only use FOutList in the
   // Timer event, but here I'm confident the timer isn't running...
   if assigned(FOnFeedback) then
   begin
     FOutlist.Clear;
-    FOutlist.Add(FPlayerProcess.CommandLine);
+    FOutlist.Add(FPlayerProcess.Executable + ' ' + FPlayerProcess.Parameters.DelimitedText);
     FOutlist.Add('');
     FonFeedback(Self, FOutlist);
   end;
 
+  // Populate defaults
+  FDuration := -1;
+  FRate := 1;
+
   FPlayerProcess.Execute;
 
-  // Inject a request for Duration
-  FDuration := -1;
+  // Get/Set Initial State
   SendMPlayerCommand('get_time_length');
-  FRequestVolume := True;
+  SendMPlayerCommand('volume ' + IntToStr(FVolume) + ' 1');
+  FRequestVolume := True;   // Confirm set volume worked...
 
   // Start the timer that handles feedback from mplayer
   FTimer.Enabled := True;
@@ -550,6 +651,7 @@ begin
   if FPlayerProcess = nil then
     exit;
 
+  DebugLn(Format('Exitcode=%d.  ExitStatus=%d', [fPlayerProcess.ExitCode, fPlayerProcess.ExitStatus]));
   FPaused := False;
   FDuration := -1;
   FTimer.Enabled := False;
@@ -578,7 +680,7 @@ end;
 
 procedure TCustomMPlayerControl.EraseBackground(DC: HDC);
 begin
-  if (not Running) and (FCanvas <> nil) then
+  if (FCanvas <> nil) then
     with FCanvas do
     begin
       if DC <> 0 then
@@ -588,8 +690,6 @@ begin
       if DC <> 0 then
         Handle := 0;
     end;
-  // else
-  // everything is painted, so erasing the background is not needed
 end;
 
 function TCustomMPlayerControl.DoCommand(ACommand, AResultIdentifier: string): string;
@@ -633,13 +733,15 @@ begin
         slTemp.Delete(i);
       end;
 
-      // Ensure any feedback we accidently intercepted get's processed
+      // Ensure any feedback we accidently intercepted gets processed
       if Assigned(FOnFeedback) and (slTemp.Count > 0) then
         FOnFeedback(Self, slTemp);
     finally
       slTemp.Free;
     end;
-  end;
+  end
+  Else
+    DebugLn('TCustomMPlayerControl.DoCommand - missed response');
 
   // Resume the timer
   FTimer.Enabled := True;
@@ -653,6 +755,25 @@ begin
     exit;
 
   Result := StrToFloatDef(DoCommand('get_time_pos', 'ans_time_position='), 0);
+end;
+
+function TCustomMPlayerControl.GetRate: single;
+begin
+  Result := FRate;
+
+  //If not Running Then
+  //  Result := FRate
+  //Else
+  //  Result := StrToFloatDef(DoCommand('get_property speed', 'ans_speed='), 1)
+end;
+
+procedure TCustomMPlayerControl.SetImagePath(AValue: string);
+begin
+  if DirectoryExistsUTF8(AValue) then
+  begin
+    FImagePath:=AValue;
+    SetCurrentDirUTF8(AValue);
+  end;
 end;
 
 procedure TCustomMPlayerControl.SetPosition(AValue: single);
