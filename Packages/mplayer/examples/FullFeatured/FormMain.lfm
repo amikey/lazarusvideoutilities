@@ -87,7 +87,7 @@ object frmMain: TfrmMain
       Max = 25
       OnChange = TrackBarVolumeChange
       Orientation = trVertical
-      Position = 10
+      Position = 0
       Reversed = True
       ScalePos = trBottom
       TickMarks = tmBoth
@@ -266,6 +266,7 @@ object frmMain: TfrmMain
       Caption = 'Fast Forward'
       Enabled = False
       ImageIndex = 5
+      OnClick = btnFWDClick
     end
     object ToolButton9: TToolButton
       Left = 435
@@ -311,6 +312,8 @@ object frmMain: TfrmMain
     Panels = <>
   end
   object OpenDialog1: TOpenDialog
+    Filter = 'All Video|*.wmv;*.asf;*.avi;*.mpg;*.mpeg;*.divx;*.mp4;*.pkt|Microsoft Video|*.wmv;*.asf|Other Video|*.avi;*.mpg;*.mpeg;*.divx;*.mp4|NetMC Video|*.pkt|Text Files|*.txt|Microsoft Audio|*.wma|All Files|*.*'
+    FilterIndex = 0
     left = 40
     top = 88
   end
@@ -608,5 +611,10 @@ object frmMain: TfrmMain
       FF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFFF
       FF00FFFFFF00FFFFFF00FFFFFF00
     }
+  end
+  object dlgFindmplayer: TOpenDialog
+    Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    left = 175
+    top = 183
   end
 end

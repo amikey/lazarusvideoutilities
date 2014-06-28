@@ -31,6 +31,7 @@ Type
     memResults: TMemo;
     MPlayerControl1: TMPlayerControl;
     OpenDialog1: TOpenDialog;
+    dlgFindmplayer: TOpenDialog;
     pnlCommands: TPanel;
     pnlFeedback: TPanel;
     pnlPos: TPanel;
@@ -45,6 +46,7 @@ Type
     ToolButton9: TToolButton;
     TrackBarPlaying: TTrackBar;
     TrackBarVolume: TTrackBar;
+    procedure btnFWDClick(Sender: TObject);
     Procedure btnLoadClick(Sender: TObject);
     Procedure btnPauseClick(Sender: TObject);
     Procedure btnPlayClick(Sender: TObject);
@@ -57,14 +59,18 @@ Type
     Procedure OnPlaying(ASender: TObject; APosition: Single);
     Procedure OnStop(Sender: TObject);
     Procedure TrackBarPlayingChange(Sender: TObject);
-    Procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    Procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    Procedure TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     Procedure TrackBarVolumeChange(Sender: TObject);
   Private
     Function GetUpdatingPosition: Boolean;
     Procedure SetUpdatingPosition(AValue: Boolean);
 
     Procedure PopulateCommands(ARunning: Boolean);
+
+    Procedure RefreshUI;
   Private
     FUpdatingPosition: Integer;
     FLastPosition: Integer;
@@ -77,11 +83,14 @@ Var
 
 Implementation
 
+Uses
+  FileUtil;
+
 {$R *.lfm}
 
 { TfrmMain }
 
-Procedure TfrmMain.FormCreate(Sender: TObject);
+procedure TfrmMain.FormCreate(Sender: TObject);
 Begin
   FUpdatingPosition := 0;
   FLastPosition := -1;
@@ -89,27 +98,31 @@ Begin
 
   MPlayerControl1.Volume := 50;
 
-  {$IFDEF Linux}
-  MPlayerControl1.MPlayerPath := '';
-  MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
-  {$else $IFDEF Windows}
-
-  // Download MPlayer generic for Windows and save under Program Folder Directory
-  // Or add to %PATH% environment folder
-  // http://sourceforge.net/projects/mplayer-win32/
+  // Have a go at finding where mplayer is installed
   If Not MPlayerControl1.FindMPlayerPath Then
     MPlayerControl1.MPlayerPath :=
-      IncludeTrailingBackslash(ExtractFileDir(Application.ExeName)) + 'mplayer\mplayer.exe';
+      IncludeTrailingBackslash(ExtractFileDir(Application.ExeName)) +
+      IncludeTrailingBackSlash('mplayer') + 'mplayer' + GetExeExt;
+
+  {$IFDEF Linux}
+  MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
+  {$else $IFDEF Windows}
   MPlayerControl1.StartParam := '-vo gl_nosw';
-  //MPlayerControl1.StartParam := '-vo direct3d';
-  //MPlayerControl1.StartParam := '-vf screenshot';
   {$ENDIF}
 
   PopulateCommands(False);
 End;
 
-Procedure TfrmMain.btnLoadClick(Sender: TObject);
+procedure TfrmMain.btnLoadClick(Sender: TObject);
 Begin
+  // If we didn't find the mplayer install, then ask the user if they know instead...
+  If not MPlayerControl1.FindMPlayerPath Then
+  begin
+    dlgFindmplayer.Filename := 'mplayer'+GetExeExt;
+    If dlgFindmplayer.Execute Then
+      MPlayerControl1.MPlayerPath:=dlgFindmplayer.FileName;
+  end;
+
   If OpenDialog1.Execute Then
   Begin
     MPlayerControl1.Stop;
@@ -122,23 +135,28 @@ Begin
   End;
 End;
 
-Procedure TfrmMain.btnPauseClick(Sender: TObject);
+procedure TfrmMain.btnFWDClick(Sender: TObject);
+begin
+  MPlayerControl1.Rate := MPlayerControl1.Rate * sqrt(2);
+end;
+
+procedure TfrmMain.btnPauseClick(Sender: TObject);
 Begin
   MPlayerControl1.Paused := Not MPlayerControl1.Paused;
   btnPause.Down := MPlayerControl1.Paused;
 End;
 
-Procedure TfrmMain.btnPlayClick(Sender: TObject);
+procedure TfrmMain.btnPlayClick(Sender: TObject);
 Begin
   MPlayerControl1.Play;
 End;
 
-Procedure TfrmMain.btnRunCommandClick(Sender: TObject);
+procedure TfrmMain.btnRunCommandClick(Sender: TObject);
 Var
   sOutput: String;
-  arrCommands: Array Of String;
-  slCommands: TStringList;
-  i: Integer;
+  slCommands : TStringList;
+  arrCommands : Array Of String;
+  i : Integer;
 
 Begin
   If MPlayerControl1.Running Then
@@ -158,7 +176,7 @@ Begin
       For i := 0 To slCommands.Count-1 Do
         arrCommands[i] := slCommands[i];
 
-      RunCommand(MplayerControl1.MPlayerPath, arrCommands, sOutput, [roNoConsole]);
+      RunCommand(MplayerControl1.MPlayerPath, arrCommands, sOutput);
 
       memResults.Lines.Add(MplayerControl1.MPlayerPath + ' ' + slCommands.DelimitedText);
       memResults.Append(sOutput);
@@ -168,20 +186,19 @@ Begin
   End;
 End;
 
-Procedure TfrmMain.btnStopClick(Sender: TObject);
+procedure TfrmMain.btnStopClick(Sender: TObject);
 Begin
   MPlayerControl1.Stop;
 End;
 
-Procedure TfrmMain.OnFeedback(ASender: TObject; AStrings: TStringList);
+procedure TfrmMain.OnFeedback(ASender: TObject; AStrings: TStringList);
 Begin
   memResults.Lines.AddStrings(AStrings);
 
   memResults.SelStart := Length(memResults.Text);
-  //memResults.SelLength := 0;
 End;
 
-Procedure TfrmMain.OnError(ASender: TObject; AStrings: TStringList);
+procedure TfrmMain.OnError(ASender: TObject; AStrings: TStringList);
 Var
   i: Integer;
 Begin
@@ -189,9 +206,9 @@ Begin
     memResults.Lines.Add(' Err: ' + AStrings[i]);
 End;
 
-Procedure TfrmMain.OnPlaying(ASender: TObject; APosition: Single);
+procedure TfrmMain.OnPlaying(ASender: TObject; APosition: Single);
 Begin
-  If (MPlayerControl1.Duration <> -1) Then
+  If (MPlayerControl1.Duration>0) Then
   Begin
     UpdatingPosition := True;
     Try
@@ -205,22 +222,32 @@ Begin
         ' / ' + FormatDateTime('nnn:ss', MPlayerControl1.Duration / (24 * 60 * 60));
 
       pnlPos.Width := lblPos.Width + 3;
-
-      // Reversed := True doesn't seem to apply for SelStart/SelEnd...
-      // TODO: Talk about on Forum/Consider lodging item on Bugtracker...
-      TrackBarVolume.SelEnd := TrackBarVolume.Max;
-      TrackBarVolume.SelStart := TrackBarVolume.Max - Trunc(TrackBarVolume.Max *
-        MPlayerControl1.Volume / 100);
-
-      If ActiveControl <> TrackBarVolume Then
-        TrackBarVolume.Position := TrackBarVolume.SelEnd - TrackBarVolume.SelStart;
     Finally
       UpdatingPosition := False;
     End;
   End;
+
+  UpdatingPosition:=True;
+  Try
+    // Reversed := True doesn't seem to apply for SelStart/SelEnd...
+    // TODO: Talk about on Forum/Consider lodging item on Bugtracker...
+    TrackBarVolume.SelEnd := TrackBarVolume.Max;
+    TrackBarVolume.SelStart := TrackBarVolume.Max - Trunc(TrackBarVolume.Max *
+      MPlayerControl1.Volume / 100);
+
+    If ActiveControl <> TrackBarVolume Then
+      TrackBarVolume.Position := TrackBarVolume.SelEnd - TrackBarVolume.SelStart;
+  finally
+    UpdatingPosition := False;
+  end;
+
+  If MPlayerControl1.Paused Then
+    StatusBar1.SimpleText := 'Paused'
+  Else
+    StatusBar1.SimpleText := Format('Playing at rate %.3f', [MPlayerControl1.Rate]);
 End;
 
-Procedure TfrmMain.TrackBarPlayingChange(Sender: TObject);
+procedure TfrmMain.TrackBarPlayingChange(Sender: TObject);
 Begin
   If (MPlayerControl1.Duration <> -1) And Not UpdatingPosition Then
     If TrackBarPlaying.Position <> FLastPosition Then
@@ -231,20 +258,18 @@ Begin
     End;
 End;
 
-Procedure TfrmMain.TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure TfrmMain.TrackBarPlayingMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 Begin
   MPlayerControl1.Paused := True;
 End;
 
-Procedure TfrmMain.TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
+procedure TfrmMain.TrackBarPlayingMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 Begin
   MPlayerControl1.Paused := False;
   Self.ActiveControl := memResults;
 End;
 
-Procedure TfrmMain.TrackBarVolumeChange(Sender: TObject);
+procedure TfrmMain.TrackBarVolumeChange(Sender: TObject);
 Begin
   If (TrackBarVolume.Position <> TrackBarVolume.Tag) And Not UpdatingPosition Then
   Begin
@@ -254,12 +279,12 @@ Begin
   End;
 End;
 
-Function TfrmMain.GetUpdatingPosition: Boolean;
+function TfrmMain.GetUpdatingPosition: Boolean;
 Begin
   Result := FUpdatingPosition <> 0;
 End;
 
-Procedure TfrmMain.SetUpdatingPosition(AValue: Boolean);
+procedure TfrmMain.SetUpdatingPosition(AValue: Boolean);
 Begin
   If AValue Then
     Inc(FUpdatingPosition)
@@ -267,7 +292,7 @@ Begin
     Dec(FUpdatingPosition);
 End;
 
-Procedure TfrmMain.PopulateCommands(ARunning: Boolean);
+procedure TfrmMain.PopulateCommands(ARunning: Boolean);
 Begin
   cboCommand.Items.Clear;
   If ARunning Then
@@ -307,45 +332,58 @@ Begin
   cboCommand.ItemIndex := 0;
 End;
 
-Procedure TfrmMain.OnPlay(Sender: TObject);
+procedure TfrmMain.RefreshUI;
+var
+  bRunning: Boolean;
+begin
+  bRunning := MPlayerControl1.Running;
+
+  If Not bRunning Then
+  begin
+    UpdatingPosition := True;
+    Try
+      TrackBarPlaying.Position := 0;
+      TrackBarPlaying.SelStart := 0;
+      TrackBarPlaying.SelEnd := 0;
+
+      TrackBarVolume.Position := 0;
+      TrackBarVolume.SelStart := 0;
+      TrackBarVolume.SelEnd := 0;
+    Finally
+      UpdatingPosition := False;
+    End;
+
+    StatusBar1.SimpleText := '';
+    lblPos.Caption := '';
+  end;
+
+  btnStop.Enabled := bRunning;
+  btnPause.Enabled := bRunning;
+  btnFWD.Enabled := bRunning;
+
+  lblStartParams.Enabled := Not bRunning;
+  cboStartParams.Enabled := Not bRunning;
+
+  PopulateCommands(bRunning);
+end;
+
+procedure TfrmMain.OnPlay(Sender: TObject);
 Begin
   memResults.Lines.Add('OnPlay message received');
-  StatusBar1.SimpleText := 'Playing ' + MPlayerControl1.Filename;
+  Caption := Application.Name + ': ' + MPlayerControl1.Filename;
 
-  btnStop.Enabled := MPlayerControl1.Running;
-  btnPause.Enabled := MPlayerControl1.Running;
-
-  lblStartParams.Enabled := Not MPlayerControl1.Running;
-  cboStartParams.Enabled := Not MPlayerControl1.Running;
-
-  PopulateCommands(MPlayerControl1.Running);
+  RefreshUI;
 End;
 
-Procedure TfrmMain.OnStop(Sender: TObject);
+procedure TfrmMain.OnStop(Sender: TObject);
 Begin
   If csDestroying In ComponentState Then
     exit;
 
   memResults.Lines.Add('OnStop message received');
-  StatusBar1.SimpleText := '';
+  Caption := Application.Name;
 
-  UpdatingPosition := True;
-  Try
-    TrackBarPlaying.Position := 0;
-    TrackBarPlaying.SelStart := 0;
-  Finally
-    UpdatingPosition := False;
-  End;
-
-  btnStop.Enabled := MPlayerControl1.Running;
-  btnPause.Enabled := MPlayerControl1.Running;
-
-  lblStartParams.Enabled := Not MPlayerControl1.Running;
-  cboStartParams.Enabled := Not MPlayerControl1.Running;
-
-  lblPos.Caption := '';
-
-  PopulateCommands(MPlayerControl1.Running);
+  RefreshUI;
 End;
 
 End.
