@@ -46,6 +46,7 @@ Type
     ToolButton9: TToolButton;
     TrackBarPlaying: TTrackBar;
     TrackBarVolume: TTrackBar;
+    procedure btnFrameGrabClick(Sender: TObject);
     procedure btnFWDClick(Sender: TObject);
     Procedure btnLoadClick(Sender: TObject);
     Procedure btnPauseClick(Sender: TObject);
@@ -53,6 +54,7 @@ Type
     Procedure btnRunCommandClick(Sender: TObject);
     Procedure btnStopClick(Sender: TObject);
     Procedure FormCreate(Sender: TObject);
+    procedure MPlayerControl1GrabImage(ASender: TObject; AFilename: String);
     Procedure OnError(ASender: TObject; AStrings: TStringList);
     Procedure OnFeedback(ASender: TObject; AStrings: TStringList);
     Procedure OnPlay(Sender: TObject);
@@ -107,11 +109,16 @@ Begin
   {$IFDEF Linux}
   MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
   {$else $IFDEF Windows}
-  MPlayerControl1.StartParam := '-vo gl_nosw';
+  MPlayerControl1.StartParam := '-vo direct3d';
   {$ENDIF}
 
   PopulateCommands(False);
 End;
+
+procedure TfrmMain.MPlayerControl1GrabImage(ASender: TObject; AFilename: String);
+begin
+  memResults.Lines.Add('Grabbed image: '+AFilename);
+end;
 
 procedure TfrmMain.btnLoadClick(Sender: TObject);
 Begin
@@ -138,6 +145,13 @@ End;
 procedure TfrmMain.btnFWDClick(Sender: TObject);
 begin
   MPlayerControl1.Rate := MPlayerControl1.Rate * sqrt(2);
+end;
+
+procedure TfrmMain.btnFrameGrabClick(Sender: TObject);
+begin
+  MPlayerControl1.ImagePath:=ExtractFilePath(MPlayerControl1.Filename);
+  MPlayerControl1.GrabImage;
+  //memResults.Lines.Add('Grabbed '+MPlayerControl1.LastImageFilename);
 end;
 
 procedure TfrmMain.btnPauseClick(Sender: TObject);
@@ -360,6 +374,7 @@ begin
   btnStop.Enabled := bRunning;
   btnPause.Enabled := bRunning;
   btnFWD.Enabled := bRunning;
+  btnFrameGrab.Enabled := bRunning;
 
   lblStartParams.Enabled := Not bRunning;
   cboStartParams.Enabled := Not bRunning;

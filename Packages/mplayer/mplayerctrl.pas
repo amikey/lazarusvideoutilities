@@ -98,11 +98,14 @@ type
   TOnFeedback = procedure(ASender: TObject; AStrings: TStringList) of object;
   TOnError = procedure(ASender: TObject; AStrings: TStringList) of object;
   TOnPlaying = procedure(ASender: TObject; APosition: single) of object;
+  TOnGrabImage = Procedure(ASender: TObject; AFilename: String) of object;
 
   TCustomMPlayerControl = class(TWinControl)
   private
     FFilename: string;
     FImagePath: string;
+    FLastImageFilename: String;
+    FOnGrabImage: TOnGrabImage;
     FRate: single;
     FStartParam:string;
     FLoop: integer;
@@ -157,7 +160,7 @@ type
     function FindMPlayerPath : Boolean;
 
     procedure GrabImage;
-    function LastImageFilename: String;
+    property LastImageFilename: String read FLastImageFilename;
 
     property Filename: string read FFilename write SetFilename;
     property StartParam: string read FStartParam write SetStartParam;
@@ -178,6 +181,7 @@ type
     property OnPlaying: TOnPlaying read FOnPlaying write FOnPlaying;
     property OnPlay: TNotifyEvent read FOnPlay write FOnPlay;
     property OnStop: TNotifyEvent read FOnStop write FOnStop;
+    Property OnGrabImage: TOnGrabImage read FOnGrabImage write FOnGrabImage;
   end;
 
   TMPlayerControl = class(TCustomMPlayerControl)
@@ -201,6 +205,7 @@ type
     property OnPlaying;  // When not paused, an event every 250ms to 500ms with Position
     property OnPlay;     // Sent when mplayer initialised with video file
     property OnStop;     // Sent sometime (approx 250ms) after mplayer finishes
+    property OnGrabImage; // Fired when mplayer reports the filename
   end;
 
   { TWSMPlayerControl }
@@ -281,7 +286,6 @@ begin
 
         // Property Requested are provided in the format
         // ANS_PropertyName=Value
-
         if Pos('ans_', sTemp) = 1 then
         begin
           iPosEquals := Pos('=', sTemp);
@@ -332,7 +336,20 @@ begin
 
         end
         else if Assigned(FOnPlay) and (sTemp = 'starting playback...') then
-          FOnPlay(Self);
+          FOnPlay(Self)
+        else if (Pos('*** screenshot', sTemp)=1) Then
+        begin
+          //  result looks like *** screenshot 'shot0002.png' ***
+          FLastImageFilename:=IncludeTrailingBackslash(GetCurrentDirUTF8) + Copy(sTemp, 17, Pos('.', sTemp)-17+4);
+
+          if assigned(FOnGrabImage) And FileExistsUTF8(FLastImageFilename) then
+            FOnGrabImage(Self, FLastImageFilename);
+
+          // clear this response from the queue
+          FOutList.Delete(i);
+        end
+        else if sTemp='sending vfctrl_screenshot!' then
+          FOutList.Delete(i);
       end;
 
       if Assigned(FOnFeedback) and (FOutlist.Count > 0) then
@@ -543,12 +560,7 @@ end;
 procedure TCustomMPlayerControl.GrabImage;
 begin
   if Running then
-    DoCommand();
-end;
-
-function TCustomMPlayerControl.LastImageFilename: String;
-begin
-
+    SendMPlayerCommand('screenshot 0')
 end;
 
 procedure TCustomMPlayerControl.Play;

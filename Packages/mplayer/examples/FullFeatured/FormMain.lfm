@@ -32,6 +32,7 @@ object frmMain: TfrmMain
       OnPlaying = OnPlaying
       OnPlay = OnPlay
       OnStop = OnStop
+      OnGrabImage = MPlayerControl1GrabImage
     end
     object pnlTrackbar: TPanel
       Left = 0
@@ -172,14 +173,14 @@ object frmMain: TfrmMain
         Top = 20
         Width = 215
         ItemHeight = 15
-        ItemIndex = 0
+        ItemIndex = 1
         Items.Strings = (
           '-vo gl_nosw'
           '-vo direct3d'
           '-vf snapshot'
         )
         TabOrder = 2
-        Text = '-vo gl_nosw'
+        Text = '-vo direct3d'
       end
       object lblCommand: TLabel
         Left = 234
@@ -281,6 +282,7 @@ object frmMain: TfrmMain
       Caption = 'Grab Frame'
       Enabled = False
       ImageIndex = 6
+      OnClick = btnFrameGrabClick
     end
     object btnNudgeBack: TToolButton
       Left = 273
