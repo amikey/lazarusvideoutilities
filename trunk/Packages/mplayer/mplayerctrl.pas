@@ -434,6 +434,7 @@ end;
 
 procedure TCustomMPlayerControl.SetFilename(const AValue: string);
   // Copied from win\process.inc
+  // mplayer uses identical params under linux, so this is safe
   Function MaybeQuoteIfNotQuoted(Const S : String) : String;
   begin
     If (Pos(' ',S)<>0) and (pos('"',S)=0) then
@@ -871,4 +872,4 @@ initialization
 
 {$endif}
 end.
-
+
