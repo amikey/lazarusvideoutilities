@@ -10,11 +10,12 @@ Usage:
 When you install the package you get a new component in the palette under
 Multimedia.
 
-See the example mplayer/examples/project1.lpi.
+See the example mplayer/examples/simple/project1.lpi.
 
 Hints:
 TMPlayerControl only implemented a very small set of the mplayer features:
-Play, Stop, Pause, Loop, Volume.
+Play, Stop, Pause, Loop, Volume, Rate, GrabImage, Position, Duration.
+
 You can use SendMPlayerCommand to send arbitrary other commands. The complete
 list of mplayer commands execute in terminal:
   mplayer -input cmdlist

@@ -8,7 +8,6 @@
       <Unit0>
         <Filename Value="mplayerTestHarness.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <UsageCount Value="126"/>
       </Unit0>
       <Unit1>
@@ -18,20 +17,21 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="FormMain"/>
-        <EditorIndex Value="1"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
         <WindowIndex Value="1"/>
         <TopLine Value="77"/>
-        <CursorPos X="17" Y="104"/>
+        <CursorPos X="28" Y="84"/>
         <UsageCount Value="126"/>
         <Bookmarks Count="1">
-          <Item0 Y="262" ID="1"/>
+          <Item0 X="1" Y="262" ID="1"/>
         </Bookmarks>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="..\..\mplayerctrl.pas"/>
         <UnitName Value="MPlayerCtrl"/>
-        <IsVisibleTab Value="True"/>
         <WindowIndex Value="1"/>
         <TopLine Value="46"/>
         <CursorPos X="49" Y="59"/>
@@ -40,62 +40,53 @@
       </Unit2>
       <Unit3>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\lazfileutils.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="23"/>
         <CursorPos X="10" Y="40"/>
         <UsageCount Value="1"/>
       </Unit3>
       <Unit4>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\winlazfileutils.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="730"/>
         <CursorPos Y="742"/>
         <UsageCount Value="1"/>
       </Unit4>
       <Unit5>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\lazfileutils.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="126"/>
         <CursorPos Y="154"/>
         <UsageCount Value="1"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\fileutil.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="95"/>
         <CursorPos X="28" Y="122"/>
         <UsageCount Value="1"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\fileutil.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="910"/>
         <CursorPos Y="929"/>
         <UsageCount Value="1"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\components\lazutils\lazutf8.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="227"/>
         <CursorPos Y="249"/>
         <UsageCount Value="1"/>
       </Unit8>
       <Unit9>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\vlc\reglazvlc.pas"/>
-        <IsVisibleTab Value="True"/>
         <CursorPos X="2" Y="4"/>
         <UsageCount Value="1"/>
       </Unit9>
       <Unit10>
         <Filename Value="..\..\..\..\..\..\..\Packages\PasLibVlc\source\PasLibVlcUnit.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="64"/>
         <UsageCount Value="2"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit10>
       <Unit11>
         <Filename Value="..\..\..\..\..\..\..\Packages\PasLibVlc\source\PasLibVlcPlayerUnit.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="2156"/>
         <CursorPos X="12" Y="2129"/>
         <UsageCount Value="2"/>
@@ -103,21 +94,18 @@
       </Unit11>
       <Unit12>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\fpc\2.6.4\source\rtl\objpas\classes\classesh.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="1986"/>
         <CursorPos X="11" Y="2003"/>
         <UsageCount Value="1"/>
       </Unit12>
       <Unit13>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\fpc\2.6.4\source\rtl\objpas\classes\cregist.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="168"/>
         <CursorPos X="3" Y="174"/>
         <UsageCount Value="1"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\fpc\2.6.4\source\packages\fcl-process\src\process.pp"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="436"/>
         <CursorPos X="52" Y="457"/>
@@ -136,7 +124,6 @@
       <Unit16>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\fcl-process\src\process.pp"/>
         <UnitName Value="process"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="453"/>
         <CursorPos X="3" Y="457"/>
@@ -144,7 +131,6 @@
       </Unit16>
       <Unit17>
         <Filename Value="..\..\..\..\..\..\..\Lazarus\fpc\2.6.4\source\rtl\amiga\m68k\doslibf.inc"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="360"/>
         <CursorPos X="10" Y="378"/>
         <UsageCount Value="1"/>
@@ -154,14 +140,12 @@
         <ComponentName Value="BuildFileDialog"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="712"/>
         <CursorPos X="49" Y="714"/>
         <UsageCount Value="1"/>
       </Unit18>
       <Unit19>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\fcl-process\src\unix\process.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="63"/>
         <CursorPos X="26" Y="191"/>
@@ -169,7 +153,6 @@
       </Unit19>
       <Unit20>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\lazdebuggers\lazdebuggerfp\fpdebugdebugger.pas"/>
-        <IsVisibleTab Value="True"/>
         <TopLine Value="1234"/>
         <CursorPos X="68" Y="1158"/>
         <UsageCount Value="1"/>
@@ -177,7 +160,6 @@
       <Unit21>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\lclclasses.pp"/>
         <UnitName Value="LCLClasses"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="8"/>
         <CursorPos X="47" Y="32"/>
@@ -192,7 +174,6 @@
       </Unit22>
       <Unit23>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\fcl-process\src\pipes.pp"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="39"/>
         <CursorPos X="10" Y="53"/>
@@ -200,14 +181,12 @@
       </Unit23>
       <Unit24>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\fcl-process\src\win\pipes.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <CursorPos X="18" Y="5"/>
         <UsageCount Value="19"/>
       </Unit24>
       <Unit25>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\lclintf.pas"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="36"/>
         <CursorPos X="25" Y="50"/>
@@ -215,7 +194,6 @@
       </Unit25>
       <Unit26>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\stdctrls.pp"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="149"/>
         <CursorPos X="51" Y="161"/>
@@ -223,7 +201,6 @@
       </Unit26>
       <Unit27>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\interfaces\win32\win32proc.pp"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="290"/>
         <CursorPos X="47" Y="291"/>
@@ -231,7 +208,6 @@
       </Unit27>
       <Unit28>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\wince\wininc\messages.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="210"/>
         <CursorPos X="27" Y="224"/>
@@ -239,7 +215,6 @@
       </Unit28>
       <Unit29>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\win\wininc\messages.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="201"/>
         <CursorPos X="6" Y="215"/>
@@ -247,7 +222,6 @@
       </Unit29>
       <Unit30>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\winunits-jedi\src\jwawinuser.pas"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="7719"/>
         <CursorPos X="35" Y="7726"/>
@@ -255,22 +229,18 @@
       </Unit30>
       <Unit31>
         <Filename Value="..\..\..\..\..\..\32bit\extras\lazarus_ccr\applications\cactusjukebox\source\functions.pas"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <CursorPos X="10" Y="37"/>
         <UsageCount Value="10"/>
       </Unit31>
       <Unit32>
         <Filename Value="..\..\..\..\..\..\InspectorMike\Trunk\Shared\Support\OSSupport.pas"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
         <TopLine Value="114"/>
         <CursorPos X="25" Y="147"/>
         <UsageCount Value="11"/>
       </Unit32>
       <Unit33>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\include\customform.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="720"/>
         <CursorPos X="3" Y="734"/>
@@ -278,7 +248,6 @@
       </Unit33>
       <Unit34>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\lazutils\fileutil.pas"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="91"/>
         <CursorPos X="31" Y="104"/>
@@ -286,7 +255,6 @@
       </Unit34>
       <Unit35>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\lcl\include\control.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="3628"/>
         <CursorPos Y="3642"/>
@@ -295,7 +263,6 @@
       <Unit36>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\lazutils\utf8process.pp"/>
         <UnitName Value="UTF8Process"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="133"/>
         <CursorPos X="14" Y="152"/>
@@ -303,7 +270,6 @@
       </Unit36>
       <Unit37>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\objpas\sysutils\sysstrh.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="88"/>
         <CursorPos X="10" Y="101"/>
@@ -311,7 +277,6 @@
       </Unit37>
       <Unit38>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\objpas\sysutils\sysstr.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="561"/>
         <CursorPos Y="573"/>
@@ -319,7 +284,6 @@
       </Unit38>
       <Unit39>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\fcl-process\src\win\process.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="245"/>
         <CursorPos Y="266"/>
@@ -327,7 +291,6 @@
       </Unit39>
       <Unit40>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\inc\objpash.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="228"/>
         <CursorPos X="20" Y="242"/>
@@ -335,7 +298,6 @@
       </Unit40>
       <Unit41>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\inc\objpas.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="930"/>
         <CursorPos X="11" Y="932"/>
@@ -344,7 +306,6 @@
       <Unit42>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\lazutils\lazfileutils.pas"/>
         <UnitName Value="LazFileUtils"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="66"/>
         <CursorPos X="29" Y="82"/>
@@ -352,7 +313,6 @@
       </Unit42>
       <Unit43>
         <Filename Value="..\..\..\..\..\..\32bit\lazarus\components\lazutils\winlazfileutils.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="873"/>
         <CursorPos X="3" Y="877"/>
@@ -360,7 +320,6 @@
       </Unit43>
       <Unit44>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\inc\ustringh.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="116"/>
         <CursorPos X="10" Y="130"/>
@@ -368,7 +327,6 @@
       </Unit44>
       <Unit45>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\win\wininc\redef.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="326"/>
         <CursorPos X="10" Y="349"/>
@@ -376,7 +334,6 @@
       </Unit45>
       <Unit46>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\packages\winunits-jedi\src\jwawinbase.pas"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="11529"/>
         <CursorPos X="24" Y="11542"/>
@@ -384,7 +341,6 @@
       </Unit46>
       <Unit47>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\win\wininc\unifun.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="350"/>
         <CursorPos X="139" Y="359"/>
@@ -392,7 +348,6 @@
       </Unit47>
       <Unit48>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\win\wininc\defines.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="630"/>
         <CursorPos X="26" Y="642"/>
@@ -400,16 +355,14 @@
       </Unit48>
       <Unit49>
         <Filename Value="..\..\..\..\..\..\32bit\fpc\rtl\inc\systemh.inc"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="1104"/>
         <CursorPos X="11" Y="1111"/>
         <UsageCount Value="11"/>
       </Unit49>
       <Unit50>
-        <Filename Value="..\..\..\..\..\..\..\..\..\..\home\oem\development\lazarus\lcl\lclclasses.pp"/>
+        <Filename Value="B:\home\oem\development\lazarus\lcl\lclclasses.pp"/>
         <UnitName Value="LCLClasses"/>
-        <EditorIndex Value="-1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="9"/>
         <CursorPos X="10" Y="26"/>
@@ -417,10 +370,12 @@
       </Unit50>
       <Unit51>
         <Filename Value="FormMain.lfm"/>
-        <EditorIndex Value="-1"/>
+        <ComponentName Value="frmMain"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
         <WindowIndex Value="1"/>
-        <TopLine Value="4"/>
-        <CursorPos X="9" Y="8"/>
+        <TopLine Value="601"/>
+        <CursorPos X="2" Y="620"/>
         <UsageCount Value="10"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
       </Unit51>
@@ -428,123 +383,12 @@
     <General>
       <ActiveWindowIndexAtStart Value="1"/>
     </General>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="1" HistoryIndex="0">
       <Position1>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="255" Column="17" TopLine="241"/>
-      </Position1>
-      <Position2>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="270" Column="23" TopLine="247"/>
-      </Position2>
-      <Position3>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="322" Column="46" TopLine="299"/>
-      </Position3>
-      <Position4>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="255" Column="17" TopLine="241"/>
-      </Position4>
-      <Position5>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="270" Column="23" TopLine="247"/>
-      </Position5>
-      <Position6>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="271" Column="32" TopLine="248"/>
-      </Position6>
-      <Position7>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="309" Column="65" TopLine="287"/>
-      </Position7>
-      <Position8>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="321" Column="29" TopLine="299"/>
-      </Position8>
-      <Position9>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="276" Column="36" TopLine="264"/>
-      </Position9>
-      <Position10>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="270" TopLine="264"/>
-      </Position10>
-      <Position11>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="271" TopLine="264"/>
-      </Position11>
-      <Position12>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="274" TopLine="264"/>
-      </Position12>
-      <Position13>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="278" TopLine="264"/>
-      </Position13>
-      <Position14>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="279" TopLine="264"/>
-      </Position14>
-      <Position15>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="281" TopLine="264"/>
-      </Position15>
-      <Position16>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="283" TopLine="264"/>
-      </Position16>
-      <Position17>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="287" TopLine="265"/>
-      </Position17>
-      <Position18>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="289" TopLine="267"/>
-      </Position18>
-      <Position19>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="293" TopLine="271"/>
-      </Position19>
-      <Position20>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="343" TopLine="288"/>
-      </Position20>
-      <Position21>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="270" TopLine="260"/>
-      </Position21>
-      <Position22>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="255" TopLine="243"/>
-      </Position22>
-      <Position23>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="120" Column="24" TopLine="109"/>
-      </Position23>
-      <Position24>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="270" Column="28" TopLine="247"/>
-      </Position24>
-      <Position25>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="271" Column="37" TopLine="248"/>
-      </Position25>
-      <Position26>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="309" Column="70" TopLine="287"/>
-      </Position26>
-      <Position27>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="321" Column="34" TopLine="299"/>
-      </Position27>
-      <Position28>
-        <Filename Value="..\..\mplayerctrl.pas"/>
-        <Caret Line="729" TopLine="709"/>
-      </Position28>
-      <Position29>
         <Filename Value="FormMain.pas"/>
         <Caret Line="116" Column="3" TopLine="98"/>
-      </Position29>
+      </Position1>
     </JumpHistory>
   </ProjectSession>
+  <EditorMacros Count="0"/>
 </CONFIG>
