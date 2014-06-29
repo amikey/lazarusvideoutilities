@@ -11,17 +11,17 @@ object frmMain: TfrmMain
   LCLVersion = '1.3'
   object pnlVideo: TPanel
     Left = 642
-    Height = 504
+    Height = 506
     Top = 42
     Width = 610
     Align = alClient
     BevelOuter = bvNone
-    ClientHeight = 504
+    ClientHeight = 506
     ClientWidth = 610
     TabOrder = 0
     object MPlayerControl1: TMPlayerControl
       Left = 0
-      Height = 477
+      Height = 479
       Top = 0
       Width = 586
       Align = alClient
@@ -37,7 +37,7 @@ object frmMain: TfrmMain
     object pnlTrackbar: TPanel
       Left = 0
       Height = 27
-      Top = 477
+      Top = 479
       Width = 610
       Align = alBottom
       BevelOuter = bvNone
@@ -58,14 +58,14 @@ object frmMain: TfrmMain
           Left = 0
           Height = 15
           Top = 4
-          Width = 103
+          Width = 116
           Caption = 'mmm:ss / mmm:ss'
           ParentColor = False
         end
       end
       object TrackBarPlaying: TTrackBar
         Left = 0
-        Height = 27
+        Height = 41
         Top = 0
         Width = 504
         Frequency = 5
@@ -82,7 +82,7 @@ object frmMain: TfrmMain
     object TrackBarVolume: TTrackBar
       AnchorSideLeft.Control = MPlayerControl1
       Left = 586
-      Height = 477
+      Height = 479
       Top = 0
       Width = 24
       Max = 25
@@ -100,17 +100,17 @@ object frmMain: TfrmMain
   end
   object pnlFeedback: TPanel
     Left = 0
-    Height = 504
+    Height = 506
     Top = 42
     Width = 637
     Align = alLeft
     BevelOuter = bvNone
-    ClientHeight = 504
+    ClientHeight = 506
     ClientWidth = 637
     TabOrder = 1
     object memResults: TMemo
       Left = 0
-      Height = 458
+      Height = 460
       Top = 46
       Width = 637
       Align = alClient
@@ -135,13 +135,13 @@ object frmMain: TfrmMain
       ClientWidth = 637
       TabOrder = 1
       object cboCommand: TComboBox
-        Left = 232
-        Height = 23
+        Left = 272
+        Height = 27
         Top = 20
-        Width = 306
+        Width = 266
         Anchors = [akTop, akLeft, akRight]
         DropDownCount = 15
-        ItemHeight = 15
+        ItemHeight = 0
         Items.Strings = (
           ''
           ''
@@ -163,16 +163,16 @@ object frmMain: TfrmMain
         Left = 6
         Height = 15
         Top = 3
-        Width = 215
+        Width = 250
         Caption = 'Start Params (passed to mplayer on Play)'
         ParentColor = False
       end
       object cboStartParams: TComboBox
         Left = 6
-        Height = 23
+        Height = 27
         Top = 20
         Width = 215
-        ItemHeight = 15
+        ItemHeight = 0
         ItemIndex = 1
         Items.Strings = (
           '-vo gl_nosw'
@@ -183,10 +183,10 @@ object frmMain: TfrmMain
         Text = '-vo direct3d'
       end
       object lblCommand: TLabel
-        Left = 234
+        Left = 272
         Height = 15
         Top = 3
-        Width = 324
+        Width = 369
         Caption = 'Slave Command (if playing) / mplayer Params (if not playing)'
         ParentColor = False
       end
@@ -194,7 +194,7 @@ object frmMain: TfrmMain
   end
   object Splitter1: TSplitter
     Left = 637
-    Height = 504
+    Height = 506
     Top = 42
     Width = 5
   end
@@ -217,14 +217,14 @@ object frmMain: TfrmMain
       OnClick = btnLoadClick
     end
     object ToolButton2: TToolButton
-      Left = 35
+      Left = 38
       Top = 2
       Width = 5
       Caption = 'ToolButton2'
       Style = tbsDivider
     end
     object btnPlay: TToolButton
-      Left = 40
+      Left = 43
       Top = 2
       Caption = 'Play'
       Enabled = False
@@ -232,7 +232,7 @@ object frmMain: TfrmMain
       OnClick = btnPlayClick
     end
     object btnStop: TToolButton
-      Left = 70
+      Left = 75
       Top = 2
       Caption = 'Stop'
       Enabled = False
@@ -240,7 +240,7 @@ object frmMain: TfrmMain
       OnClick = btnStopClick
     end
     object btnPause: TToolButton
-      Left = 102
+      Left = 111
       Top = 2
       Caption = 'Pause'
       Enabled = False
@@ -248,21 +248,21 @@ object frmMain: TfrmMain
       OnClick = btnPauseClick
     end
     object ToolButton6: TToolButton
-      Left = 141
+      Left = 154
       Top = 2
       Width = 5
       Caption = 'ToolButton6'
       Style = tbsDivider
     end
     object btnRewind: TToolButton
-      Left = 146
+      Left = 159
       Top = 2
       Caption = 'Rewind'
       Enabled = False
       ImageIndex = 4
     end
     object btnFWD: TToolButton
-      Left = 193
+      Left = 211
       Top = 2
       Caption = 'Fast Forward'
       Enabled = False
@@ -270,14 +270,14 @@ object frmMain: TfrmMain
       OnClick = btnFWDClick
     end
     object ToolButton9: TToolButton
-      Left = 435
+      Left = 483
       Top = 2
       Width = 5
       Caption = 'ToolButton9'
       Style = tbsDivider
     end
     object btnFrameGrab: TToolButton
-      Left = 440
+      Left = 488
       Top = 2
       Caption = 'Grab Frame'
       Enabled = False
@@ -285,21 +285,21 @@ object frmMain: TfrmMain
       OnClick = btnFrameGrabClick
     end
     object btnNudgeBack: TToolButton
-      Left = 273
+      Left = 301
       Top = 2
       Caption = 'Nudge Back'
       Enabled = False
       ImageIndex = 7
     end
     object btnNudgeForward: TToolButton
-      Left = 345
+      Left = 382
       Top = 2
       Caption = 'Nudge Forward'
       Enabled = False
       ImageIndex = 8
     end
     object ToolButton4: TToolButton
-      Left = 268
+      Left = 296
       Top = 2
       Width = 5
       Caption = 'ToolButton4'
@@ -308,8 +308,8 @@ object frmMain: TfrmMain
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Height = 23
-    Top = 546
+    Height = 21
+    Top = 548
     Width = 1252
     Panels = <>
   end
@@ -621,4 +621,4 @@ object frmMain: TfrmMain
     left = 175
     top = 183
   end
-end
+end

@@ -112,6 +112,8 @@ Begin
   MPlayerControl1.StartParam := '-vo direct3d';
   {$ENDIF}
 
+  cboStartParams.Text := MPlayerControl1.StartParam;
+
   PopulateCommands(False);
 End;
 
@@ -404,4 +406,4 @@ Begin
   RefreshUI;
 End;
 
-End.
+End.
