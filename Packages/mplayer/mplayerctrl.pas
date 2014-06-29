@@ -41,35 +41,45 @@ Changes:
               Replaced StrToCmdParam with AnsiQuotedStr in Play
                 - StrToCmdParam didn't work under Windows - wrapped filename in ', Windows needed "
               Persisted FCanvas outside of IDE to prevent painting issues when no file playing
-                by Mike Thompson
+              / Mike Thompson
 
-  2014-06-24  Added FindMPlayerPath (Refactored code from existing Play)
+  2014-06-24  Added FindMPlayerPath (Refactored code from Play)
   2014-06-28  Extended FindMPlayer to also look for mplayer in a subfolder of the exe
-              Fixed painting issues when playing audio files...
+              Fixed painting issues when playing audio files (introduces a flicker on
+                resize when playing video :-( )...
               Fixed repeated requests for volume in files that don't support volme
-              Changed Process population code in .Play from .CommandLine to use .Executable & .Parameters
-                (incidently, removed the need to use AnsiQuotedStr around Filename under Windows)
+              Changed TProcessUTF8 population code in .Play from .CommandLine to
+                use .Executable & .Parameters
+                - incidently removed the need to use AnsiQuotedStr around Filename under Windows
               Added Rate (Fast Forward only, mplayer doesn't support rewind)
               Only request position updates every ON_PLAYING_INTERVAL
               Set Volume on Play
               Added GrabImage and OnGrabImage (delay before mplayer grabs image)
+                - doesn't work well with some renderers (-glnosw for instance,
+                  also inconsistently on -vo X11)
+                - Capturing failed attempts in code will be hard, for now I'll
+                  just ensure this is documented on the wiki (recommend -vo direct3d under win)
+              / Mike Thompson
 
 TODO
-  2014-06-21
               EXTENSIVE TESTING UNDER LINUX
                 - Tested under Linus Mint 16 (MATE) with mplayer installed (not mplayer2)
-              Test new .Parameters under Linux (unicode filename & spaces in filename)
               Consider descending control from TGraphicControl (instead of creating FCanvas)
               Add StepForward(increment), Stepback(increment)
-              Add FrameGrab (and OnFrameGrab)
-                - Requires adding -vf screenshot to initial params
-                - Find out how to set grab path
-                - initial tests good, but framegrab saved to exe folder, needs to be to
-                  user defined folder
               Hide PlayerProcess (OnFeedback/OnError events + Running property
                 means there is no reason for this to be exposed... (speak to mattias/six1 first)
               Fix repeated requests for Pause in TimerEvent (Use DoCommand)
               Change existing commands (ie "volume") to their set_property equivalent
+              Position isn't working for some videos (they have an embedded start_time.
+                existing code assumes start_time is 0 for all files)
+                - Investigate switching over to position by percent instead,
+                  or calculate start time from stream information and subtract
+                  that from broadcast position
+NOTES
+  2014-06-29  TProcessUTF8 is a thin wrapper over TProcess.  TProcess on Windows
+                is not unicode aware, so there is currently an issue playing unicode
+                filenames under windows.
+                No easy apparent solution other than upgrading TProcess (win\process.inc).
 }
 unit MPlayerCtrl;
 
@@ -117,6 +127,7 @@ type
     FVolume: integer;
     FCanvas: TCanvas;
     FLastPosition: string;
+    FRequestingPosition: boolean;
     FLastTimer: TDateTime;
     FRequestVolume: boolean;
     FDuration: single;
@@ -142,10 +153,6 @@ type
     procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
     procedure WMSize(var Message: TLMSize); message LM_SIZE;
 	
-    // Allows this control to inject commands without the results
-    // being exposed to end users of this control (other than via
-    // public interface)
-    // DoCommand is actually written for get_property XXX calls
     function DoCommand(ACommand, AResultIdentifier: string): string;
   public
     constructor Create(TheOwner: TComponent); override;
@@ -173,7 +180,7 @@ type
 
     property ImagePath: string read FImagePath write SetImagePath;
 
-    property Rate: single read GetRate write SetRate;
+    property Rate: single read GetRate write SetRate; // mplayer only supports 0.1 to 100
     property Duration: single read FDuration; // seconds
     property Position: single read GetPosition write SetPosition; // seconds
 
@@ -252,7 +259,6 @@ var
   dPosition: single;
   i: integer;
   sTemp: string;
-  bFoundPosition: boolean;
   iPosEquals: SizeInt;
   sValue: string;
   sProperty: string;
@@ -264,9 +270,11 @@ begin
     If Running And ((Now-FLastTimer)>ON_PLAYING_INTERVAL) Then
     begin
       // Inject a request for current position
-      bFoundPosition := False;
       if Assigned(FOnPlaying) and not FPaused then
+      begin
         SendMPlayerCommand('get_time_pos');
+        FRequestingPosition := True;
+      end;
 
       FLastTimer := Now;
     end;
@@ -303,7 +311,7 @@ begin
               // clear this response from the queue
               FOutList.Delete(i);
             end
-            else if Assigned(FOnPlaying) and (not bFoundPosition) and
+            else if Assigned(FOnPlaying) and (FRequestingPosition) and
               (sProperty = 'time_position') then
             begin
               // Are we paused by any chance?
@@ -315,7 +323,7 @@ begin
               dPosition := StrToFloatDef(sValue, 0);
 
               // Don't remove any further ANS_Time_Positions, they're not ours...
-              bFoundPosition := True;
+              FRequestingPosition := False;
 
               // Send the message
               FOnPlaying(Self, dPosition);
@@ -629,7 +637,7 @@ begin
   finally
     slStartParams.Free;
   end;
-  FPlayerProcess.Parameters.Add(SysToUTF8(FFilename));
+  FPlayerProcess.Parameters.Add(FFilename);
 
   FPlayerProcess.Parameters.Delimiter:=' ';
   DebugLn(['TCustomMPlayerControl.Play ', FPlayerProcess.Parameters.DelimitedText]);
@@ -664,7 +672,7 @@ begin
   if FPlayerProcess = nil then
     exit;
 
-  DebugLn(Format('Exitcode=%d.  ExitStatus=%d', [fPlayerProcess.ExitCode, fPlayerProcess.ExitStatus]));
+  DebugLn(Format('ExitStatus=%d', [fPlayerProcess.ExitStatus]));
   FPaused := False;
   FDuration := -1;
   FTimer.Enabled := False;
@@ -705,6 +713,10 @@ begin
     end;
 end;
 
+// Allows this control to inject commands without the results
+// being exposed to end users of this control (other than via
+// public interface)
+// DoCommand is actually written for get_property XXX calls
 function TCustomMPlayerControl.DoCommand(ACommand, AResultIdentifier: string): string;
 var
   i: integer;
@@ -859,4 +871,4 @@ initialization
 
 {$endif}
 end.
-
+
