@@ -60,21 +60,22 @@ Changes:
                 - Capturing failed attempts in code will be hard, for now I'll
                   just ensure this is documented on the wiki (recommend -vo direct3d under win)
               / Mike Thompson
+  2014-07-01  Discovered -identify to load stats (including Start Time)
+              Moved set volume on play to the parameters
+              Refactored TimerEvent to ensure OnPlay & OnPlaying are broadcast in correct sequence
+              Added VideoInfo and AudioInfo (load values from -identify)
+              Fixed Position for videos with embedded Start_Time
+              Deprecated PlayerProcess (no need for it to be exposed anymore)
+              Realised no need for StepForward/StepBack - can be implemented externally via Position
+              Exposed OnMouseWheel and implemented wheelmouse scrolling through video in FullFeatured
+                demo
+              / Mike Thompson
 
 TODO
               EXTENSIVE TESTING UNDER LINUX
                 - Tested under Linus Mint 16 (MATE) with mplayer installed (not mplayer2)
               Consider descending control from TGraphicControl (instead of creating FCanvas)
-              Add StepForward(increment), Stepback(increment)
-              Hide PlayerProcess (OnFeedback/OnError events + Running property
-                means there is no reason for this to be exposed... (speak to mattias/six1 first)
-              Fix repeated requests for Pause in TimerEvent (Use DoCommand)
-              Change existing commands (ie "volume") to their set_property equivalent
-              Position isn't working for some videos (they have an embedded start_time.
-                existing code assumes start_time is 0 for all files)
-                - Investigate switching over to position by percent instead,
-                  or calculate start time from stream information and subtract
-                  that from broadcast position
+
 NOTES
   2014-06-29  TProcessUTF8 is a thin wrapper over TProcess.  TProcess on Windows
                 is not unicode aware, so there is currently an issue playing unicode
@@ -103,6 +104,21 @@ uses
   ;
 
 type
+  TVideoInfo = record
+    Codec: string;
+    Format: string;
+    Width, Height: Integer;
+    FPS: Single;
+    Bitrate: Integer;
+  end;
+
+  TAudioInfo = record
+    Codec: string;
+    Format: string;
+    Bitrate: Single;
+    Channels: Integer;
+    SampleRate: Integer;    // Hz
+  end;
 
   { TCustomMPlayerControl }
   
@@ -115,7 +131,7 @@ type
   private
     FFilename: string;
     FImagePath: string;
-    FLastImageFilename: String;
+    FLastImageFilename: string;
     FOnGrabImage: TOnGrabImage;
     FRate: single;
     FStartParam:string;
@@ -126,10 +142,12 @@ type
     FTimer: TTimer;
     FVolume: integer;
     FCanvas: TCanvas;
+    FPosition: Single;
     FLastPosition: string;
     FRequestingPosition: boolean;
     FLastTimer: TDateTime;
     FRequestVolume: boolean;
+    FStartTime: single;
     FDuration: single;
     FOnError: TOnError;
     FOnFeedback: TOnFeedback;
@@ -137,6 +155,8 @@ type
     FOnPlaying: TOnPlaying;
     FOnStop: TNotifyEvent;
     FOutList: TStringList;
+    FVideoInfo: TVideoInfo;
+    FAudioInfo: TAudioInfo;
     function GetPosition: single;
     function GetRate: single;
     procedure SetImagePath(AValue: string);
@@ -153,7 +173,7 @@ type
     procedure WMPaint(var Message: TLMPaint); message LM_PAINT;
     procedure WMSize(var Message: TLMSize); message LM_SIZE;
 	
-    function DoCommand(ACommand, AResultIdentifier: string): string;
+    procedure InitialiseInfo;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -173,7 +193,7 @@ type
     property Filename: string read FFilename write SetFilename;
     property StartParam: string read FStartParam write SetStartParam;
     property MPlayerPath: string read FMPlayerPath write SetMPlayerPath;
-    property PlayerProcess: TProcessUTF8 read fPlayerProcess;
+    property PlayerProcess: TProcessUTF8 read fPlayerProcess;  deprecated;
     property Paused: boolean read FPaused write SetPaused;
     property Loop: integer read FLoop write SetLoop; // -1 no, 0 forever, 1 once, 2 twice, ...
     property Volume: integer read FVolume write SetVolume;
@@ -183,6 +203,9 @@ type
     property Rate: single read GetRate write SetRate; // mplayer only supports 0.1 to 100
     property Duration: single read FDuration; // seconds
     property Position: single read GetPosition write SetPosition; // seconds
+
+    property VideoInfo: TVideoInfo read FVideoInfo; // this isn't fully populated until OnPlay recieved
+    property AudioInfo: TAudioInfo read FAudioInfo; // this isn't fully populated until OnPlay received
 
     property OnFeedback: TOnFeedback read FOnFeedback write FOnFeedback;
     property OnError: TOnError read FOnError write FOnError;
@@ -206,14 +229,15 @@ type
     property OnClick;
     property OnMouseUp;
     property OnMouseDown;
+    property OnMouseWheel;
     property Visible;
     property Volume;     // 0 to 100
     property OnFeedback; // Provides standard console output from mplayer
     property OnError;    // Provides stderr console output from mplayer
     property OnPlaying;  // When not paused, an event every 250ms to 500ms with Position
-    property OnPlay;     // Sent when mplayer initialised with video file
-    property OnStop;     // Sent sometime (approx 250ms) after mplayer finishes
-    property OnGrabImage; // Fired when mplayer reports the filename
+    property OnPlay;     // Sent after mplayer initialises the current video file
+    property OnStop;     // Sent sometime (up to approx 250ms) after mplayer finishes current video
+    property OnGrabImage; // Fired when mplayer reports the filename of the image grab
   end;
 
   { TWSMPlayerControl }
@@ -256,15 +280,18 @@ end;
 procedure TCustomMPlayerControl.TimerEvent(Sender: TObject);
 var
   ErrList: TStringList;
-  dPosition: single;
   i: integer;
   sTemp: string;
-  iPosEquals: SizeInt;
+  iPosEquals, iPosAfterUS: SizeInt;
   sValue: string;
   sProperty: string;
   iError: Integer;
+  bPostOnPlay, bPostOnStop, bPostOnPlaying: boolean;
 
 begin
+  bPostOnPlay:=False;
+  bPostOnStop:=False;
+  bPostOnPlaying:=False;
   if FPlayerProcess<>nil then
   begin
     If Running And ((Now-FLastTimer)>ON_PLAYING_INTERVAL) Then
@@ -276,76 +303,79 @@ begin
         FRequestingPosition := True;
       end;
 
-      FLastTimer := Now;
-    end;
+      // Inject a request for Volume level
+      if FRequestVolume then
+        SendMPlayerCommand('get_property volume');
 
-    // Inject a request for Volume level
-    if Running And FRequestVolume then
-      SendMPlayerCommand('get_property volume');
+      FLastTimer := Now;
+      bPostOnPlaying := True;
+    end;
 
     if FPlayerProcess.Output.NumBytesAvailable > 0 then
     begin
       FOutList.LoadFromStream(FPlayerProcess.Output);
 
       // Look for responses to injected commands...
-      // or for standard commands
+      // or for standard issued information
       for i := FOutList.Count - 1 downto 0 do
       begin
         sTemp := Lowercase(FOutList[i]);
+        iPosEquals := Pos('=', sTemp);
 
-        // Property Requested are provided in the format
-        // ANS_PropertyName=Value
-        if Pos('ans_', sTemp) = 1 then
+        // Identify requests look like ID_Property=Value
+        // Property requests look like ANS_Property=Value
+        if (iPosEquals>1) and ((Pos('ans_', sTemp)=1) or (Pos('id_', sTemp)=1)) then
         begin
-          iPosEquals := Pos('=', sTemp);
+          iPosAfterUS := Pos('_', sTemp)+1;
+          sValue := Copy(sTemp, iPosEquals + 1, Length(sTemp) - iPosEquals);
+          sProperty := Copy(sTemp, iPosAfterUS, iPosEquals - iPosAfterUS);
 
-          if iPosEquals > 1 then
+          if Assigned(FOnPlaying) and (FRequestingPosition) and (sProperty = 'time_position') then
           begin
-            sValue := Copy(sTemp, iPosEquals + 1, Length(sTemp) - iPosEquals);
-            sProperty := Copy(sTemp, 5, iPosEquals - 5);
+            // Are we paused by any chance?
+            if sValue = FLastPosition then
+              SendMPlayerCommand('get_property pause');
 
-            if (FDuration = -1) and (sProperty = 'length') then
-            begin
-              FDuration := StrToFloatDef(sValue, -1);
+            FLastPosition := sValue;
 
-              // clear this response from the queue
-              FOutList.Delete(i);
-            end
-            else if Assigned(FOnPlaying) and (FRequestingPosition) and
-              (sProperty = 'time_position') then
-            begin
-              // Are we paused by any chance?
-              if sValue = FLastPosition then
-                SendMPlayerCommand('get_property pause');
+            FPosition := StrToFloatDef(sValue, 0) - FStartTime;
 
-              FLastPosition := sValue;
+            // Don't remove any further ANS_Time_Positions, they're not ours...
+            FRequestingPosition := False;
 
-              dPosition := StrToFloatDef(sValue, 0);
+            // clear this response from the queue
+            FOutList.Delete(i);
+          end
+          else
+            case sProperty Of
+              'volume' :
+                begin
+                  FVolume := Trunc(0.5 + StrToFloatDef(sValue, 100));
+                  FRequestVolume := False;
 
-              // Don't remove any further ANS_Time_Positions, they're not ours...
-              FRequestingPosition := False;
-
-              // Send the message
-              FOnPlaying(Self, dPosition);
-
-              // clear this response from the queue
-              FOutList.Delete(i);
-            end
-            else if {FRequestVolume And }(sProperty = 'volume') then
-            begin
-              FVolume := Trunc(0.5 + StrToFloatDef(sValue, 100));
-              FRequestVolume := False;
-
-              // clear this response from the queue
-              FOutList.Delete(i);
-            end
-            else if (sProperty = 'pause') then
-              FPaused := (sValue = 'yes');
+                  // clear this response from the queue
+                  FOutList.Delete(i);
+                 end;
+              'length'       : FDuration := StrToFloatDef(sValue, -1);
+              'pause'        : FPaused := (sValue = 'yes');
+              'video_codec'  : FVideoInfo.Codec:=sValue;
+              'video_format' : FVideoInfo.Format:=sValue;
+              'video_bitrate': FVideoInfo.Bitrate:=StrToIntDef(sValue, 0);
+              'video_width'  : FVideoInfo.Width:=StrToIntDef(sValue, 0);
+              'video_height' : FVideoInfo.Height:=StrToIntDef(sValue, 0);
+              'video_fps'    : FVideoInfo.FPS:=StrToFloatDef(sValue, 0);
+              'start_time'   : FStartTime:=StrToFloatDef(sValue, 0);
+              //'seekable'     : FSeekable:=(sValue='1');
+              'audio_codec'  : FAudioInfo.Codec:=sValue;
+              'audio_format' : FAudioInfo.Format:=sValue;
+              'audio_bitrate': FAudioInfo.Bitrate:=StrToIntDef(sValue, 0);
+              'audio_rate'   : FAudioInfo.SampleRate:=StrToIntDef(sValue, 0);
+              'audio_nch'    : FAudioInfo.Channels:=StrToIntDef(sValue, 0);
+              'exit'         : bPostOnStop:=True;
           end;
-
-        end
+        end // ID_ or ANS_
         else if Assigned(FOnPlay) and (sTemp = 'starting playback...') then
-          FOnPlay(Self)
+          bPostOnPlay:=True
         else if (Pos('*** screenshot', sTemp)=1) Then
         begin
           //  result looks like *** screenshot 'shot0002.png' ***
@@ -393,7 +423,14 @@ begin
     end;
   end;
 
-  If not Running Then
+  // don't post the OnPlay until all the data above is processed
+  if Assigned(FOnPlay) and bPostOnPlay then
+    FOnPlay(Self);
+
+  If Assigned(FOnPlaying) And bPostOnPlaying then
+    FOnPlaying(Self, FPosition);
+
+  If (not Running) Or bPostOnStop Then
     Stop;
 end;
 
@@ -424,7 +461,6 @@ begin
   if (Message.SizeType and Size_SourceIsInterface)>0 then
     DoOnResize;
 end;
-
 
 procedure TCustomMPlayerControl.SetStartParam(const AValue: string);
 begin
@@ -585,11 +621,9 @@ begin
     exit;
   end;
 
-  if Playing then
-  begin
-    if FRate>1 Then
+  if Playing then begin
+    if FRate<>1 Then
       Rate := 1;
-
     exit;
   end;
 
@@ -614,30 +648,35 @@ begin
   FPlayerProcess := TProcessUTF8.Create(Self);
   FPlayerProcess.Options := FPlayerProcess.Options + [poUsePipes, poNoConsole];
 
-  // -slave              : allow us to control mplayer
-  // -quiet              : supress most messages
   // -really-quiet       : DONT USE: causes the video player to not connect to -wid.  Odd...
-  // -msglevel global=6  : required for EOF signal when playing stops
-  // -wid                : sets Window ID (display video in our control)
   // -noconfig all       : stop mplayer from reading commands from a text file
-  // -vf screenshot      : Allow frame grab
   // -zoom -fs           : Unsure:  Only perceptible difference is background drawn black not green
   // -vo direct3d        : uses Direct3D renderer (recommended under windows)
   // -vo gl_nosw         : uses OpenGL no software renderer
   FPlayerProcess.Executable:=FMPlayerPath;
-  FPlayerProcess.Parameters.Add('-slave');
-  FPlayerProcess.Parameters.Add('-quiet');
+  FPlayerProcess.Parameters.Add('-slave');     // allow us to control mplayer
+  FPlayerProcess.Parameters.Add('-quiet');     // supress most messages
+  FPlayerProcess.Parameters.Add('-identify');  // Request stats on playing file
+  FPlayerProcess.Parameters.Add('-volume');    // Set initial volume
+  FPlayerProcess.Parameters.Add(IntToStr(FVolume));
   FPlayerProcess.Parameters.Add('-vf');
-  FPlayerProcess.Parameters.Add('screenshot');
-  FPlayerProcess.Parameters.Add('-wid');
+  FPlayerProcess.Parameters.Add('screenshot'); // (with -vf) Allow frame grab
+
+  FPlayerProcess.Parameters.Add('-wid');       // sets Window ID (display video in our control)
   FPlayerProcess.Parameters.Add(IntToStr(CurWindowID));
-  slStartParams := TStringList.Create;
-  Try
-    CommandToList(StartParam, slStartParams);
-    FPlayerProcess.Parameters.AddStrings(slStartParams);
-  finally
-    slStartParams.Free;
+
+  // Add the user defined start params
+  if (Trim(FStartParam)<>'') then
+  begin
+    slStartParams := TStringList.Create;
+    try
+      CommandToList(StartParam, slStartParams);
+      FPlayerProcess.Parameters.AddStrings(slStartParams);
+    finally
+      slStartParams.Free;
+    end;
   end;
+
   FPlayerProcess.Parameters.Add(FFilename);
 
   FPlayerProcess.Parameters.Delimiter:=' ';
@@ -654,15 +693,9 @@ begin
   end;
 
   // Populate defaults
-  FDuration := -1;
-  FRate := 1;
+  InitialiseInfo;
 
   FPlayerProcess.Execute;
-
-  // Get/Set Initial State
-  SendMPlayerCommand('get_time_length');
-  SendMPlayerCommand('volume ' + IntToStr(FVolume) + ' 1');
-  FRequestVolume := True;   // Confirm set volume worked...
 
   // Start the timer that handles feedback from mplayer
   FTimer.Enabled := True;
@@ -714,73 +747,35 @@ begin
     end;
 end;
 
-// Allows this control to inject commands without the results
-// being exposed to end users of this control (other than via
-// public interface)
-// DoCommand is actually written for get_property XXX calls
-function TCustomMPlayerControl.DoCommand(ACommand, AResultIdentifier: string): string;
-var
-  i: integer;
-  slTemp: TStringList;
+procedure TCustomMPlayerControl.InitialiseInfo;
 begin
-  if not Running then
-    Exit;
+  FLastPosition := '';
+  FPosition := 0;
+  FRequestVolume := False;
+  FStartTime := 0;
+  FRate := 1;
+  FDuration := -1;
 
-  // Pause the timer
-  FTimer.Enabled := False;
-
-  // Clear existing mplayer console output
-  TimerEvent(Self);
-
-  SendMPlayerCommand(ACommand);
-
-  // Now *immediately* read the output results.
-  // this may have problems if mplayer takes
-  // a while to execute this command, but outside intilisation
-  // this doesn't appear to be the case...
-
-  if FPlayerProcess.Output.NumBytesAvailable > 0 then
+  with FVideoInfo Do
   begin
-    slTemp := TStringList.Create;
-    try
-      // Read the result
-      slTemp.LoadFromStream(FPlayerProcess.Output);
+    Format := '';
+    Width := 0;
+    Height := 0;
+    FPS := 0;
+    Bitrate := 0;
+  end;
 
-      // Find our reply
-      i := 0;
-      while (i < slTemp.Count) and (Pos(AResultIdentifier, slTemp[i]) <> 1) do
-        Inc(i);
-
-      if (i <> slTemp.Count) then
-      begin
-        Result := ExtractAfter(slTemp[i], AResultIdentifier);
-
-        // Hide our feedback from the outer app
-        slTemp.Delete(i);
-      end;
-
-      // Ensure any feedback we accidently intercepted gets processed
-      if Assigned(FOnFeedback) and (slTemp.Count > 0) then
-        FOnFeedback(Self, slTemp);
-    finally
-      slTemp.Free;
-    end;
-  end
-  Else
-    DebugLn('TCustomMPlayerControl.DoCommand - missed response');
-
-  // Resume the timer
-  FTimer.Enabled := True;
+  With FAudioInfo Do
+  begin
+    Format := '';
+    Bitrate := 0;
+  end;
 end;
 
 function TCustomMPlayerControl.GetPosition: single;
 begin
-  Result := 0;
-
-  if not Running then
-    exit;
-
-  Result := StrToFloatDef(DoCommand('get_time_pos', 'ans_time_position='), 0);
+  DebugLn(Format('Get Position %.3f', [FPosition]));
+  Result := FPosition;
 end;
 
 function TCustomMPlayerControl.GetRate: single;
@@ -805,7 +800,15 @@ end;
 procedure TCustomMPlayerControl.SetPosition(AValue: single);
 begin
   if Running then
-    SendMPlayerCommand(Format('pausing_keep seek %.3f 2', [AValue]));
+  begin
+    if AValue>0 Then
+      FPosition := AValue
+    Else
+      FPosition := 0;
+
+    DebugLn(Format('Set Position to  %.3f', [FPosition]));
+    SendMPlayerCommand(Format('pausing_keep seek %.3f 2', [FPosition]));
+  end;
 end;
 
 {$ifdef Linux}
@@ -860,16 +863,13 @@ class procedure TWSMPlayerControl.DestroyHandle(const AWinControl: TWinControl
 begin
   inherited DestroyHandle(AWinControl);
 end;
-
-initialization
-  RegisterWSComponent(TCustomMPlayerControl,TWSMPlayerControl);
-  {$I mplayerctrl.lrs}
-
-{$else ifwindows}
-
-initialization
-  {$I mplayerctrl.lrs}
-
 {$endif}
+
+initialization
+  {$ifdef Linux}
+  RegisterWSComponent(TCustomMPlayerControl,TWSMPlayerControl);
+  {$endif}
+
+  {$I mplayerctrl.lrs}
 end.
 
