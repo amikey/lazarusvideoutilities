@@ -6,7 +6,7 @@ Interface
 
 Uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, Buttons, ExtCtrls, ComCtrls,
-  StdCtrls, MPlayerCtrl, Process;
+  StdCtrls, MPlayerCtrl, Process, types;
 
 Type
 
@@ -49,12 +49,20 @@ Type
     procedure btnFrameGrabClick(Sender: TObject);
     procedure btnFWDClick(Sender: TObject);
     Procedure btnLoadClick(Sender: TObject);
+    procedure btnNudgeBackClick(Sender: TObject);
+    procedure btnNudgeForwardClick(Sender: TObject);
     Procedure btnPauseClick(Sender: TObject);
     Procedure btnPlayClick(Sender: TObject);
     Procedure btnRunCommandClick(Sender: TObject);
     Procedure btnStopClick(Sender: TObject);
     Procedure FormCreate(Sender: TObject);
-    procedure MPlayerControl1GrabImage(ASender: TObject; AFilename: String);
+
+      procedure FormMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+      var Handled: Boolean);
+
+        procedure MPlayerControl1MouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+        var Handled: Boolean);
+    procedure OnGrabImage(ASender: TObject; AFilename: String);
     Procedure OnError(ASender: TObject; AStrings: TStringList);
     Procedure OnFeedback(ASender: TObject; AStrings: TStringList);
     Procedure OnPlay(Sender: TObject);
@@ -109,7 +117,7 @@ Begin
   {$IFDEF Linux}
   MPlayerControl1.StartParam := '-vo x11 -zoom -fs';
   {$else $IFDEF Windows}
-  MPlayerControl1.StartParam := '-vo direct3d';
+  MPlayerControl1.StartParam := '-vo direct3d -nofontconfig';
   {$ENDIF}
 
   cboStartParams.Text := MPlayerControl1.StartParam;
@@ -117,7 +125,27 @@ Begin
   PopulateCommands(False);
 End;
 
-procedure TfrmMain.MPlayerControl1GrabImage(ASender: TObject; AFilename: String);
+procedure TfrmMain.FormMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+  Caption := Format('WheelDelta %d', [WheelDelta]);
+end;
+
+procedure TfrmMain.MPlayerControl1MouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+  var Handled: Boolean);
+begin
+  if MPlayerControl1.Running Then
+  begin
+    MPlayerControl1.Paused := True;
+
+    if WheelDelta>0 Then
+      MPlayerControl1.Position := MPlayerControl1.Position + 1/3
+    Else
+      MPlayerControl1.Position := MPlayerControl1.Position - 1/3;
+  end;
+end;
+
+procedure TfrmMain.OnGrabImage(ASender: TObject; AFilename: String);
 begin
   memResults.Lines.Add('Grabbed image: '+AFilename);
 end;
@@ -146,6 +174,18 @@ Begin
     btnPlay.Enabled := True;
   End;
 End;
+
+procedure TfrmMain.btnNudgeBackClick(Sender: TObject);
+begin
+  MPlayerControl1.Paused := True;
+  MPlayerControl1.Position := MPlayerControl1.Position - 1;
+end;
+
+procedure TfrmMain.btnNudgeForwardClick(Sender: TObject);
+begin
+  MPlayerControl1.Paused := True;
+  MPlayerControl1.Position := MPlayerControl1.Position + 1;
+end;
 
 procedure TfrmMain.btnFWDClick(Sender: TObject);
 begin
@@ -186,6 +226,7 @@ Begin
   End
   Else
   Begin
+    sOutput := '';
     slCommands := TStringList.Create;
     slCommands.Delimiter:=' ';
     Try
@@ -380,6 +421,8 @@ begin
   btnPause.Enabled := bRunning;
   btnFWD.Enabled := bRunning;
   btnFrameGrab.Enabled := bRunning;
+  btnNudgeBack.Enabled := bRunning;
+  btnNudgeForward.Enabled := bRunning;
 
   lblStartParams.Enabled := Not bRunning;
   cboStartParams.Enabled := Not bRunning;
@@ -406,4 +449,4 @@ Begin
   RefreshUI;
 End;
 
-End.
+End.
